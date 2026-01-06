@@ -50,6 +50,19 @@ body {
     background-clip: text;
 }
 
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+
 .page-link {
     padding: 0.5rem 1rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

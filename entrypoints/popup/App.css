@@ -18,6 +18,7 @@ header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+
 header h1 {
   margin: 0;
   font-size: 20px;
@@ -27,6 +28,19 @@ header h1 {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 
 .settings-btn {
   background: transparent;

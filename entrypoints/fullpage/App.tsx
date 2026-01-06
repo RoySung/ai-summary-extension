@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import icon from '../../assets/icon.png';
 import './style.css';
 
 interface Message {
@@ -130,7 +131,10 @@ export default function FullPage() {
         <div className="fullpage-app">
             <header className="fullpage-header">
                 <div className="header-content">
-                    <h1>🤖 AI Summary</h1>
+                    <div className="logo-container">
+                        <img src={icon} alt="AI Summary" className="logo-icon" />
+                        <h1>AI Summary</h1>
+                    </div>
                     {pageUrl && (
                         <a href={pageUrl} target="_blank" rel="noopener noreferrer" className="page-link">
                             Visit Original Page ↗

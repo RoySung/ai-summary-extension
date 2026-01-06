@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import icon from '../../assets/icon.png';
 import './App.css';
 
 interface Message {
@@ -132,7 +133,10 @@ function App() {
   return (
     <div className="app">
       <header>
-        <h1>🤖 AI Summary</h1>
+        <div className="logo-container">
+          <img src={icon} alt="AI Summary" className="logo-icon" />
+          <h1>AI Summary</h1>
+        </div>
         <button className="settings-btn" onClick={openSettings} title="Settings">
           ⚙️
         </button>

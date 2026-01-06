@@ -59,7 +59,7 @@ export const DEFAULT_SETTINGS = {
     apiProvider: 'gemini' as 'gemini' | 'openai',
     geminiApiKey: '',
     openaiApiKey: '',
-    geminiModel: 'gemini-2.0-flash-exp',
+    geminiModel: 'gemini-2.5-flash',
     openaiModel: 'gpt-4o-mini',
     customPrompts: {
         summarize: DEFAULT_PROMPTS.SUMMARIZE,

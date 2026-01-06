@@ -1,5 +1,5 @@
 export default defineContentScript({
-  matches: ['&lt;all_urls&gt;'],
+  matches: ['*://*/*'],
   main() {
     console.log('AI Summary content script loaded');
   },

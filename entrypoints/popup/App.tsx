@@ -146,8 +146,11 @@ function App() {
           <>
             <div className="summary">
               <h3>Summary</h3>
-              <div className="summary-content markdown-content">
-                <ReactMarkdown>{summary}</ReactMarkdown>
+              <div className="summary-content-wrapper">
+                <div className="summary-content markdown-content">
+                  <ReactMarkdown>{summary}</ReactMarkdown>
+                </div>
+                {loading && <div className="loading-overlay" />}
               </div>
               <div className="summary-actions">
                 <button
@@ -156,12 +159,6 @@ function App() {
                   className="secondary-btn"
                 >
                   {loading ? 'Re-summarizing...' : '🔄 Re-summarize'}
-                </button>
-                <button
-                  onClick={() => { setSummary(null); setMessages([]); }}
-                  className="secondary-btn"
-                >
-                  New Summary
                 </button>
               </div>
             </div>

@@ -108,6 +108,27 @@ function App() {
     browser.runtime.openOptionsPage();
   };
 
+  const openInFullPage = async () => {
+    if (!summary || !pageContent) return;
+
+    const data = {
+      summary,
+      pageContent,
+      pageTitle: pageContent.title,
+      pageUrl: pageContent.url,
+      messages,
+    };
+
+    // Generate a unique ID for this session
+    const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+    // Store data in browser storage with the unique ID
+    await browser.storage.local.set({ [`fullPageData_${id}`]: data });
+
+    // Open the full page with the ID
+    browser.tabs.create({ url: `fullpage.html?id=${id}` });
+  };
+
   return (
     <div className="app">
       <header>
@@ -159,6 +180,13 @@ function App() {
                   className="secondary-btn"
                 >
                   {loading ? 'Re-summarizing...' : '🔄 Re-summarize'}
+                </button>
+                <button
+                  onClick={openInFullPage}
+                  disabled={loading}
+                  className="primary-btn"
+                >
+                  📄 Open in Full Page
                 </button>
               </div>
             </div>

@@ -160,6 +160,7 @@ header h1 {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -171,9 +172,12 @@ header h1 {
   margin-top: 12px;
 }
 
-.summary-actions .secondary-btn {
+.summary-actions .secondary-btn,
+.summary-actions .primary-btn {
   margin-top: 0;
   flex: 1;
+  font-size: 13px;
+  padding: 10px 16px;
 }
 
 /* Markdown Content Styling */

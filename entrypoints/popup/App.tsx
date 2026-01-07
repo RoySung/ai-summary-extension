@@ -20,6 +20,7 @@ function App() {
   const [question, setQuestion] = useState('');
   const [pageContent, setPageContent] = useState<any>(null);
   const [theme, setTheme] = useState<Theme>('warm');
+  const [showFloatingBall, setShowFloatingBall] = useState(true);
 
   // Get current page content and settings on mount
   useEffect(() => {
@@ -30,6 +31,13 @@ function App() {
   const loadSettings = async () => {
     const settings = await StorageManager.getSettings();
     setTheme(settings.theme);
+    setShowFloatingBall(settings.showFloatingBall);
+  };
+
+  const toggleFloatingBall = async () => {
+    const newState = !showFloatingBall;
+    await StorageManager.saveSettings({ showFloatingBall: newState });
+    setShowFloatingBall(newState);
   };
 
   const loadPageContent = async () => {
@@ -150,9 +158,19 @@ function App() {
           <img src={icon} alt="AI Summary" className="logo-icon" />
           <h1>AI Summary</h1>
         </div>
-        <button className="settings-btn" onClick={openSettings} title="Settings">
-          ⚙️
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="settings-btn"
+            onClick={toggleFloatingBall}
+            title={showFloatingBall ? "Hide Floating Ball" : "Show Floating Ball"}
+            style={{ opacity: showFloatingBall ? 1 : 0.5 }}
+          >
+            🔵
+          </button>
+          <button className="settings-btn" onClick={openSettings} title="Settings">
+            ⚙️
+          </button>
+        </div>
       </header>
 
       <div className="content">

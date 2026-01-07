@@ -53,6 +53,7 @@ export const STORAGE_KEYS = {
     CUSTOM_PROMPTS: 'customPrompts',
     CACHE_DATA: 'cacheData',
     THEME: 'theme',
+    SHOW_FLOATING_BALL: 'showFloatingBall',
 };
 
 // Default Settings
@@ -67,6 +68,7 @@ export const DEFAULT_SETTINGS = {
         question: DEFAULT_PROMPTS.QUESTION,
     },
     theme: 'warm' as Theme,
+    showFloatingBall: true,
 };
 
 export type Theme = 'warm' | 'cool';

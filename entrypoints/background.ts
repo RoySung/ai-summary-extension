@@ -44,7 +44,16 @@ interface GetContentRequest {
   tabId?: number;
 }
 
-type MessageRequest = SummarizeRequest | QuestionRequest | GetContentRequest;
+interface OpenOptionsPageRequest {
+  action: 'openOptionsPage';
+}
+
+interface OpenFullPageRequest {
+  action: 'openFullPage';
+  url: string;
+}
+
+type MessageRequest = SummarizeRequest | QuestionRequest | GetContentRequest | OpenOptionsPageRequest | OpenFullPageRequest;
 
 /**
  * Handle incoming messages
@@ -65,9 +74,29 @@ async function handleMessage(
     case 'getContent':
       return handleGetContent(message, sender);
 
+    case 'openOptionsPage':
+      return handleOpenOptionsPage();
+
+    case 'openFullPage':
+      return handleOpenFullPage(message);
+
     default:
       throw new Error('Unknown action');
   }
+}
+
+/**
+ * Handle open options page request
+ */
+async function handleOpenOptionsPage(): Promise<void> {
+  return browser.runtime.openOptionsPage();
+}
+
+/**
+ * Handle open full page request
+ */
+async function handleOpenFullPage(request: OpenFullPageRequest): Promise<browser.Tabs.Tab> {
+  return browser.tabs.create({ url: request.url });
 }
 
 /**

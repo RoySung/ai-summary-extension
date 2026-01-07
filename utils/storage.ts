@@ -18,6 +18,7 @@ export class StorageManager {
             openaiModel: result[STORAGE_KEYS.OPENAI_MODEL] || DEFAULT_SETTINGS.openaiModel,
             customPrompts: result[STORAGE_KEYS.CUSTOM_PROMPTS] || DEFAULT_SETTINGS.customPrompts,
             theme: result[STORAGE_KEYS.THEME] || DEFAULT_SETTINGS.theme,
+            showFloatingBall: result[STORAGE_KEYS.SHOW_FLOATING_BALL] ?? DEFAULT_SETTINGS.showFloatingBall,
         };
     }
 
@@ -47,6 +48,9 @@ export class StorageManager {
         }
         if (settings.theme !== undefined) {
             storageData[STORAGE_KEYS.THEME] = settings.theme;
+        }
+        if (settings.showFloatingBall !== undefined) {
+            storageData[STORAGE_KEYS.SHOW_FLOATING_BALL] = settings.showFloatingBall;
         }
 
         await browser.storage.local.set(storageData);

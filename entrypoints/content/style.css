@@ -45,6 +45,38 @@
     overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.05);
     animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    /* Ensure resize handle is positioned relative to window */
+}
+
+.ai-summary-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
+    z-index: 50;
+    background: transparent;
+}
+
+/* Optional: Add a visual indicator for the handle on hover */
+.ai-summary-resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid rgba(0, 0, 0, 0.1);
+    border-left: 2px solid rgba(0, 0, 0, 0.1);
+    border-top-left-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.ai-summary-resize-handle:hover::after {
+    opacity: 1;
 }
 
 @keyframes slideIn {
@@ -98,6 +130,8 @@
     color: #334155;
 }
 
+
+/* Content RWD */
 .ai-summary-content {
     flex: 1;
     padding: 16px;
@@ -105,6 +139,37 @@
     color: #334155;
     font-size: 14px;
     line-height: 1.6;
+    width: 100%;
+    /* Ensure content considers padding in width */
+    box-sizing: border-box;
+}
+
+/* Ensure markdown content wraps properly inside the floating window */
+.ai-summary-window .markdown-content {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.ai-summary-window .summary-content {
+    max-width: 100%;
+    box-sizing: border-box;
+    max-height: none;
+    /* Allow content to grow with window */
+}
+
+.ai-summary-window .markdown-content pre {
+    max-width: 100%;
+    white-space: pre-wrap;
+    /* or pre, but ensure overflow-x scroll */
+    overflow-x: auto;
+    word-break: normal;
+    /* Don't break words in code */
+}
+
+.ai-summary-window .markdown-content code {
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 /* Dark mode support logic (optional, basic) */
@@ -112,6 +177,10 @@
     .ai-summary-window {
         background: #1e293b;
         border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .ai-summary-resize-handle::after {
+        border-color: rgba(255, 255, 255, 0.2);
     }
 
     .ai-summary-header {

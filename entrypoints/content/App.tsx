@@ -23,6 +23,7 @@ export default function App() {
     const [pageContent, setPageContent] = useState<any>(null);
     const [theme, setTheme] = useState<Theme>('warm');
     const [showFloatingBall, setShowFloatingBall] = useState(true);
+    const [windowSize, setWindowSize] = useState({ width: 380, height: 500 });
 
     useEffect(() => {
         loadSettings();
@@ -67,6 +68,32 @@ export default function App() {
     const handleHideFloatingBall = async () => {
         await StorageManager.saveSettings({ showFloatingBall: false });
         setShowFloatingBall(false);
+    };
+
+    const handleResizeMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startWidth = windowSize.width;
+        const startHeight = windowSize.height;
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            const deltaX = startX - moveEvent.clientX; // Moving left increases width
+            const deltaY = startY - moveEvent.clientY; // Moving up increases height
+
+            setWindowSize({
+                width: Math.max(300, Math.min(800, startWidth + deltaX)),
+                height: Math.max(300, Math.min(800, startHeight + deltaY))
+            });
+        };
+
+        const handleMouseUp = () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
     };
 
     const handleSummarize = async (forceRefresh: boolean = false) => {
@@ -183,7 +210,21 @@ export default function App() {
 
     return (
         <div className="ai-summary-floating-container">
-            <div className="ai-summary-window" data-theme={theme} style={{ display: 'flex', flexDirection: 'column' }}>
+            <div
+                className="ai-summary-window"
+                data-theme={theme}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: `${windowSize.width}px`,
+                    height: `${windowSize.height}px`
+                }}
+            >
+                <div
+                    className="ai-summary-resize-handle"
+                    onMouseDown={handleResizeMouseDown}
+                    title="Drag to resize"
+                />
                 <div className="ai-summary-header">
                     <div className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <h2 className="ai-summary-title">AI Summary</h2>
@@ -206,7 +247,7 @@ export default function App() {
                     </div>
                 </div>
 
-                <div className="content" style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                <div className="ai-summary-content" style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
                     {pageContent && (
                         <div className="page-info">
                             <h2 style={{ fontSize: '14px', margin: '0 0 12px 0' }}>{pageContent.title}</h2>

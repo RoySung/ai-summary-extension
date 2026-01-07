@@ -17,6 +17,7 @@ export class StorageManager {
             geminiModel: result[STORAGE_KEYS.GEMINI_MODEL] || DEFAULT_SETTINGS.geminiModel,
             openaiModel: result[STORAGE_KEYS.OPENAI_MODEL] || DEFAULT_SETTINGS.openaiModel,
             customPrompts: result[STORAGE_KEYS.CUSTOM_PROMPTS] || DEFAULT_SETTINGS.customPrompts,
+            theme: result[STORAGE_KEYS.THEME] || DEFAULT_SETTINGS.theme,
         };
     }
 
@@ -43,6 +44,9 @@ export class StorageManager {
         }
         if (settings.customPrompts !== undefined) {
             storageData[STORAGE_KEYS.CUSTOM_PROMPTS] = settings.customPrompts;
+        }
+        if (settings.theme !== undefined) {
+            storageData[STORAGE_KEYS.THEME] = settings.theme;
         }
 
         await browser.storage.local.set(storageData);

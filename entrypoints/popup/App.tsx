@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { StorageManager } from '../../utils/storage';
+import { type Theme } from '../../utils/constants';
 import icon from '../../assets/icon.png';
+import '../../assets/theme.css';
 import './App.css';
+
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,13 +19,21 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState('');
   const [pageContent, setPageContent] = useState<any>(null);
+  const [theme, setTheme] = useState<Theme>('warm');
 
-  // Get current page content on mount
+  // Get current page content and settings on mount
   useEffect(() => {
     loadPageContent();
+    loadSettings();
   }, []);
 
+  const loadSettings = async () => {
+    const settings = await StorageManager.getSettings();
+    setTheme(settings.theme);
+  };
+
   const loadPageContent = async () => {
+
     try {
       const response = await browser.runtime.sendMessage({ action: 'getContent' });
       if (response.error) {
@@ -131,7 +143,8 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <div className="app" data-theme={theme}>
+
       <header>
         <div className="logo-container">
           <img src={icon} alt="AI Summary" className="logo-icon" />

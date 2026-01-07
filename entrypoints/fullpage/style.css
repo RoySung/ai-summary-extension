@@ -16,19 +16,20 @@ body {
 
 .fullpage-app {
     min-height: 100vh;
-    background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
-    color: #e0e0e0;
+    background: var(--bg-gradient);
+    color: var(--text-primary);
 }
 
 .fullpage-header {
-    background: rgba(30, 30, 46, 0.95);
+    background: rgba(31, 28, 24, 0.95);
+    /* Keep strict background or use var if created */
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
     position: sticky;
     top: 0;
     z-index: 100;
     padding: 1rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--secondary-border);
 }
 
 .header-content {
@@ -44,7 +45,7 @@ body {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--header-text-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -65,19 +66,19 @@ body {
 
 .page-link {
     padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary-gradient);
     color: white;
     text-decoration: none;
     border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 500;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px var(--primary-shadow);
 }
 
 .page-link:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 6px 20px var(--primary-shadow-hover);
 }
 
 .fullpage-content {
@@ -87,8 +88,8 @@ body {
 }
 
 .page-info-full {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--header-bg);
+    border: 1px solid var(--secondary-border);
     border-radius: 16px;
     padding: 2rem;
     margin-bottom: 2rem;
@@ -97,21 +98,21 @@ body {
 
 .page-info-full h2 {
     margin: 0 0 0.5rem 0;
-    color: #fff;
+    color: var(--text-white);
     font-size: 1.8rem;
     font-weight: 600;
 }
 
 .page-url {
-    color: #b8b8d1;
+    color: var(--text-secondary);
     font-size: 0.9rem;
     margin: 0;
     word-break: break-all;
 }
 
 .summary-full {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--header-bg);
+    border: 1px solid var(--secondary-border);
     border-radius: 16px;
     padding: 2rem;
     margin-bottom: 2rem;
@@ -124,12 +125,12 @@ body {
     align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--secondary-border);
 }
 
 .section-header h3 {
     margin: 0;
-    color: #fff;
+    color: var(--text-white);
     font-size: 1.5rem;
     font-weight: 600;
 }
@@ -142,7 +143,7 @@ body {
     max-height: none;
     overflow-y: visible;
     line-height: 1.8;
-    color: #e0e0e0;
+    color: var(--text-primary);
 }
 
 .loading-overlay {
@@ -161,8 +162,8 @@ body {
 }
 
 .chat-full {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--header-bg);
+    border: 1px solid var(--secondary-border);
     border-radius: 16px;
     padding: 2rem;
     backdrop-filter: blur(10px);
@@ -170,11 +171,11 @@ body {
 
 .chat-full h3 {
     margin: 0 0 1.5rem 0;
-    color: #fff;
+    color: var(--text-white);
     font-size: 1.5rem;
     font-weight: 600;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--secondary-border);
 }
 
 .messages {
@@ -206,15 +207,15 @@ body {
 }
 
 .message.user {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary-gradient);
     color: white;
     align-self: flex-end;
 }
 
 .message.assistant {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
+    background: var(--secondary-bg);
+    border: 1px solid var(--secondary-border);
+    color: var(--text-primary);
     align-self: flex-start;
 }
 
@@ -231,19 +232,19 @@ body {
 .question-input {
     flex: 1;
     padding: 1rem 1.25rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--input-bg);
+    border: 1px solid var(--secondary-border);
     border-radius: 12px;
     font-size: 1rem;
-    color: #e0e0e0;
+    color: var(--text-primary);
     transition: all 0.3s ease;
     outline: none;
 }
 
 .question-input:focus {
-    border-color: #667eea;
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--accent-color);
+    background: var(--input-focus-bg);
+    box-shadow: 0 0 0 3px var(--accent-bg-subtle);
 }
 
 .question-input:disabled {
@@ -257,7 +258,7 @@ body {
 
 .send-btn {
     padding: 1rem 1.75rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary-gradient);
     color: white;
     border: none;
     border-radius: 12px;
@@ -273,7 +274,7 @@ body {
 
 .send-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px var(--primary-shadow);
 }
 
 .send-btn:disabled {
@@ -284,9 +285,9 @@ body {
 
 .secondary-btn {
     padding: 0.75rem 1.25rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: #e0e0e0;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--secondary-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--secondary-border);
     border-radius: 10px;
     font-size: 0.95rem;
     cursor: pointer;
@@ -294,8 +295,8 @@ body {
 }
 
 .secondary-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--secondary-bg-hover);
+    border-color: var(--secondary-border-hover);
     transform: translateY(-2px);
 }
 
@@ -306,9 +307,9 @@ body {
 }
 
 .error {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #fca5a5;
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    color: var(--error-text);
     padding: 1.25rem;
     border-radius: 12px;
     margin-bottom: 1.5rem;
@@ -320,8 +321,8 @@ body {
 }
 
 .no-summary {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--header-bg);
+    border: 1px solid var(--secondary-border);
     border-radius: 16px;
     padding: 3rem;
     text-align: center;
@@ -329,7 +330,7 @@ body {
 }
 
 .no-summary p {
-    color: #b8b8d1;
+    color: var(--text-secondary);
     font-size: 1.1rem;
     margin: 0;
 }
@@ -341,7 +342,7 @@ body {
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-    color: #fff;
+    color: var(--text-white);
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
     font-weight: 600;
@@ -350,13 +351,13 @@ body {
 
 .markdown-content h1 {
     font-size: 2rem;
-    border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+    border-bottom: 2px solid var(--accent-border);
     padding-bottom: 0.5rem;
 }
 
 .markdown-content h2 {
     font-size: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--secondary-border);
     padding-bottom: 0.4rem;
 }
 
@@ -381,23 +382,23 @@ body {
 }
 
 .markdown-content code {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--code-bg);
     padding: 0.2rem 0.4rem;
     border-radius: 4px;
     font-size: 0.9em;
     font-family: 'Monaco', 'Courier New', monospace;
-    color: #fca5a5;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--error-text);
+    border: 1px solid var(--secondary-border);
 }
 
 .markdown-content pre {
-    background: rgba(0, 0, 0, 0.3);
-    color: #a5d6a7;
+    background: var(--code-bg);
+    color: var(--code-text);
     padding: 1rem;
     border-radius: 8px;
     overflow-x: auto;
     margin-bottom: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--secondary-border);
 }
 
 .markdown-content pre code {
@@ -408,24 +409,24 @@ body {
 }
 
 .markdown-content blockquote {
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--accent-color);
     padding-left: 1rem;
     margin-left: 0;
     margin-bottom: 1rem;
-    color: #b8b8d1;
+    color: var(--text-secondary);
     font-style: italic;
 }
 
 .markdown-content a {
-    color: #667eea;
+    color: var(--accent-color);
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: all 0.2s ease;
 }
 
 .markdown-content a:hover {
-    color: #764ba2;
-    border-bottom-color: #764ba2;
+    color: var(--primary-border-color);
+    border-bottom-color: var(--primary-border-color);
 }
 
 /* Responsive Design */

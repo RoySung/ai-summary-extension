@@ -52,6 +52,7 @@ export const STORAGE_KEYS = {
     OPENAI_MODEL: 'openaiModel',
     CUSTOM_PROMPTS: 'customPrompts',
     CACHE_DATA: 'cacheData',
+    THEME: 'theme',
 };
 
 // Default Settings
@@ -65,7 +66,9 @@ export const DEFAULT_SETTINGS = {
         summarize: DEFAULT_PROMPTS.SUMMARIZE,
         question: DEFAULT_PROMPTS.QUESTION,
     },
+    theme: 'warm' as Theme,
 };
 
+export type Theme = 'warm' | 'cool';
 export type Settings = typeof DEFAULT_SETTINGS;
 export type ApiProvider = 'gemini' | 'openai';

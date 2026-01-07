@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { StorageManager } from '../../utils/storage';
 import { CacheManager } from '../../utils/cache';
-import { MODELS, DEFAULT_PROMPTS, type Settings, type ApiProvider } from '../../utils/constants';
+import { MODELS, DEFAULT_PROMPTS, type Settings, type ApiProvider, type Theme } from '../../utils/constants';
+import '../../assets/theme.css';
+import icon from '../../assets/icon.png';
+
 
 function Options() {
     const [settings, setSettings] = useState<Settings>({
@@ -14,6 +17,7 @@ function Options() {
             summarize: DEFAULT_PROMPTS.SUMMARIZE,
             question: DEFAULT_PROMPTS.QUESTION,
         },
+        theme: 'warm',
     });
 
     const [saved, setSaved] = useState(false);
@@ -51,13 +55,49 @@ function Options() {
     };
 
     return (
-        <div className="options-container">
+        <div className="options-container" data-theme={settings.theme}>
             <header className="options-header">
-                <h1>🤖 AI Summary - Settings</h1>
+                <div className="header-content">
+                    <h1>AI Summary - Settings</h1>
+                </div>
             </header>
 
+            <div className="logo-container">
+                <img src={icon} className="logo" alt="AI Summary Logo" />
+            </div>
+
+
+
             <div className="options-content">
+                {/* Theme Selection */}
+                <section className="settings-section">
+                    <h2>Appearance</h2>
+                    <div className="provider-selection">
+                        <label className={`provider-option ${settings.theme === 'warm' ? 'selected' : ''}`}>
+                            <input
+                                type="radio"
+                                name="theme"
+                                value="warm"
+                                checked={settings.theme === 'warm'}
+                                onChange={(e) => setSettings({ ...settings, theme: e.target.value as Theme })}
+                            />
+                            <span className="provider-name">Warm (Orange)</span>
+                        </label>
+                        <label className={`provider-option ${settings.theme === 'cool' ? 'selected' : ''}`}>
+                            <input
+                                type="radio"
+                                name="theme"
+                                value="cool"
+                                checked={settings.theme === 'cool'}
+                                onChange={(e) => setSettings({ ...settings, theme: e.target.value as Theme })}
+                            />
+                            <span className="provider-name">Cool (Purple)</span>
+                        </label>
+                    </div>
+                </section>
+
                 {/* API Provider Selection */}
+
                 <section className="settings-section">
                     <h2>API Provider</h2>
                     <div className="provider-selection">

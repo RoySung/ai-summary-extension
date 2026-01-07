@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { StorageManager } from '../../utils/storage';
+import { type Theme } from '../../utils/constants';
 import icon from '../../assets/icon.png';
+import '../../assets/theme.css';
 import './style.css';
+
 
 interface Message {
     role: 'user' | 'assistant';
@@ -25,9 +29,12 @@ export default function FullPage() {
     const [pageContent, setPageContent] = useState<any>(null);
     const [pageTitle, setPageTitle] = useState('');
     const [pageUrl, setPageUrl] = useState('');
+    const [theme, setTheme] = useState<Theme>('warm');
 
     useEffect(() => {
+        loadSettings();
         // Get data from browser storage
+
         const loadData = async () => {
             try {
                 // Get ID from URL
@@ -56,6 +63,12 @@ export default function FullPage() {
         };
         loadData();
     }, []);
+
+    const loadSettings = async () => {
+        const settings = await StorageManager.getSettings();
+        setTheme(settings.theme);
+    };
+
 
     const handleAskQuestion = async () => {
         if (!question.trim() || !summary || !pageContent) return;
@@ -128,7 +141,7 @@ export default function FullPage() {
     };
 
     return (
-        <div className="fullpage-app">
+        <div className="fullpage-app" data-theme={theme}>
             <header className="fullpage-header">
                 <div className="header-content">
                     <div className="logo-container">

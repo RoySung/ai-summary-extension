@@ -1,0 +1,58 @@
+:root {
+    /* Default Theme (Warm/Orange) */
+    --bg-gradient: linear-gradient(135deg, #1f1c18 0%, #2e2621 100%);
+    --header-bg: rgba(255, 255, 255, 0.05);
+    --header-text-gradient: linear-gradient(135deg, #FF8008 0%, #FFC837 100%);
+
+    --primary-gradient: linear-gradient(135deg, #FF8008 0%, #FFC837 100%);
+    --primary-shadow: rgba(255, 128, 8, 0.4);
+    --primary-shadow-hover: rgba(255, 128, 8, 0.6);
+    --primary-border-color: #FFC837;
+
+    --secondary-bg: rgba(255, 255, 255, 0.1);
+    --secondary-border: rgba(255, 255, 255, 0.2);
+    --secondary-bg-hover: rgba(255, 255, 255, 0.15);
+    --secondary-border-hover: rgba(255, 255, 255, 0.3);
+
+    --text-primary: #e0e0e0;
+    --text-secondary: #dccbb8;
+    --text-white: #fff;
+
+    --accent-color: #FF8008;
+    --accent-light: #fce7cf;
+    --accent-border: rgba(255, 128, 8, 0.3);
+    --accent-bg-subtle: rgba(255, 128, 8, 0.1);
+    --accent-bg-header: rgba(255, 128, 8, 0.2);
+
+    --error-bg: rgba(239, 68, 68, 0.1);
+    --error-border: rgba(239, 68, 68, 0.3);
+    --error-text: #fca5a5;
+
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --input-focus-bg: rgba(255, 255, 255, 0.08);
+
+    --code-bg: rgba(0, 0, 0, 0.3);
+    --code-text: #a5d6a7;
+
+    --scrollbar-track: rgba(255, 255, 255, 0.05);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme='cool'] {
+    --bg-gradient: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+    --header-text-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-shadow: rgba(102, 126, 234, 0.4);
+    --primary-shadow-hover: rgba(102, 126, 234, 0.6);
+    --primary-border-color: #764ba2;
+
+    --text-secondary: #b8b8d1;
+
+    --accent-color: #667eea;
+    --accent-light: #d4d4f0;
+    --accent-border: rgba(102, 126, 234, 0.3);
+    --accent-bg-subtle: rgba(102, 126, 234, 0.1);
+    --accent-bg-header: rgba(102, 126, 234, 0.2);
+}

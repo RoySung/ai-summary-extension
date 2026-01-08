@@ -32,6 +32,12 @@ export default function FullPage() {
     const [theme, setTheme] = useState<Theme>('warm');
 
     useEffect(() => {
+        if (pageTitle) {
+            document.title = `AI Summary: ${pageTitle}`;
+        }
+    }, [pageTitle]);
+
+    useEffect(() => {
         loadSettings();
         // Get data from browser storage
 

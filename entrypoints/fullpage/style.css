@@ -21,8 +21,7 @@ body {
 }
 
 .fullpage-header {
-    background: rgba(31, 28, 24, 0.95);
-    /* Keep strict background or use var if created */
+    background: var(--bg-main);
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
     position: sticky;

@@ -18,6 +18,7 @@ function Options() {
             question: DEFAULT_PROMPTS.QUESTION,
         },
         theme: 'warm',
+        showFloatingBall: true,
     });
 
     const [saved, setSaved] = useState(false);
@@ -92,6 +93,16 @@ function Options() {
                                 onChange={(e) => setSettings({ ...settings, theme: e.target.value as Theme })}
                             />
                             <span className="provider-name">Cool (Purple)</span>
+                        </label>
+                        <label className={`provider-option ${settings.theme === 'light' ? 'selected' : ''}`}>
+                            <input
+                                type="radio"
+                                name="theme"
+                                value="light"
+                                checked={settings.theme === 'light'}
+                                onChange={(e) => setSettings({ ...settings, theme: e.target.value as Theme })}
+                            />
+                            <span className="provider-name">Light</span>
                         </label>
                     </div>
                 </section>

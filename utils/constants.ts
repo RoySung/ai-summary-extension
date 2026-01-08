@@ -71,6 +71,6 @@ export const DEFAULT_SETTINGS = {
     showFloatingBall: true,
 };
 
-export type Theme = 'warm' | 'cool';
+export type Theme = 'warm' | 'cool' | 'light';
 export type Settings = typeof DEFAULT_SETTINGS;
 export type ApiProvider = 'gemini' | 'openai';

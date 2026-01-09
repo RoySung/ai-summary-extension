@@ -2,7 +2,7 @@ import { GeminiAPI } from '../api/gemini';
 import { OpenAIAPI } from '../api/openai';
 import { StorageManager } from '../utils/storage';
 import { CacheManager } from '../utils/cache';
-import type { Settings } from '../utils/constants';
+import type { Runtime, Tabs } from 'webextension-polyfill';
 
 export default defineBackground(() => {
   console.log('AI Summary background worker initialized');
@@ -60,7 +60,7 @@ type MessageRequest = SummarizeRequest | QuestionRequest | GetContentRequest | O
  */
 async function handleMessage(
   message: MessageRequest,
-  sender: browser.Runtime.MessageSender
+  sender: Runtime.MessageSender
 ): Promise<any> {
   console.log('Received message:', message.action);
 
@@ -95,7 +95,7 @@ async function handleOpenOptionsPage(): Promise<void> {
 /**
  * Handle open full page request
  */
-async function handleOpenFullPage(request: OpenFullPageRequest): Promise<browser.Tabs.Tab> {
+async function handleOpenFullPage(request: OpenFullPageRequest): Promise<Tabs.Tab> {
   return browser.tabs.create({ url: request.url });
 }
 
@@ -184,7 +184,7 @@ async function handleQuestion(request: QuestionRequest): Promise<{ answer: strin
  */
 async function handleGetContent(
   request: GetContentRequest,
-  sender: browser.Runtime.MessageSender
+  sender: Runtime.MessageSender
 ): Promise<{ title: string; url: string; content: string; description: string }> {
   // Get active tab
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });

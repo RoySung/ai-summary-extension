@@ -1,10 +1,11 @@
 import { TOKEN_LIMITS } from './constants';
+import { encode } from 'gpt-tokenizer';
 
 /**
- * Estimate token count (rough approximation: 1 token ≈ 4 characters)
+ * Estimate token count using gpt-tokenizer
  */
 export function estimateTokenCount(text: string): number {
-    return Math.ceil(text.length / 4);
+    return encode(text).length;
 }
 
 /**

@@ -24,6 +24,57 @@ export default defineBackground(() => {
   });
 });
 
+interface TabState {
+  isLoading: boolean;
+  summary: string | null;
+  error: string | null;
+  pageContent: any | null;
+}
+
+// State manager for tabs
+class TabStateManager {
+  private static states: Map<number, TabState> = new Map();
+
+  static getState(tabId: number): TabState {
+    if (!this.states.has(tabId)) {
+      this.states.set(tabId, {
+        isLoading: false,
+        summary: null,
+        error: null,
+        pageContent: null
+      });
+    }
+    return this.states.get(tabId)!;
+  }
+
+  static updateState(tabId: number, update: Partial<TabState>) {
+    const currentState = this.getState(tabId);
+    const newState = { ...currentState, ...update };
+    this.states.set(tabId, newState);
+    this.broadcastState(tabId, newState);
+  }
+
+  private static broadcastState(tabId: number, state: TabState) {
+    // Send message to all frames in the tab (popup, content script)
+    browser.runtime.sendMessage({
+      action: 'summarizationStateUpdated',
+      tabId,
+      state
+    }).catch(() => {
+        // Ignore errors if no receivers (e.g. popup closed)
+    });
+
+    // Also try to send to the specific tab content script
+    browser.tabs.sendMessage(tabId, {
+       action: 'summarizationStateUpdated',
+       tabId,
+       state
+    }).catch(() => {
+      // Ignore errors if content script not ready
+    });
+  }
+}
+
 interface SummarizeRequest {
   action: 'summarize';
   content: string;
@@ -53,7 +104,11 @@ interface OpenFullPageRequest {
   url: string;
 }
 
-type MessageRequest = SummarizeRequest | QuestionRequest | GetContentRequest | OpenOptionsPageRequest | OpenFullPageRequest;
+interface GetSummarizationStateRequest {
+  action: 'getSummarizationState';
+}
+
+type MessageRequest = SummarizeRequest | QuestionRequest | GetContentRequest | OpenOptionsPageRequest | OpenFullPageRequest | GetSummarizationStateRequest;
 
 /**
  * Handle incoming messages
@@ -62,26 +117,46 @@ async function handleMessage(
   message: MessageRequest,
   sender: Runtime.MessageSender
 ): Promise<any> {
-  console.log('Received message:', message.action);
+  // Use sender.tab.id for content scripts, or derive from active tab for popup
+  let tabId = sender.tab?.id;
+  
+  if (!tabId) {
+      // If message is from Popup (no sender.tab), get the active tab
+      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+      tabId = tabs[0]?.id;
+  }
+
+  if (!tabId) {
+      console.warn('Could not determine tab ID for message:', message);
+      return { error: 'Could not determine active tab' };
+  }
+
+  console.log(`Received message: ${message.action} for tab ${tabId}`);
 
   switch (message.action) {
     case 'summarize':
-      return handleSummarize(message);
+      return handleSummarize(message, tabId);
 
     case 'question':
       return handleQuestion(message);
 
     case 'getContent':
-      return handleGetContent(message, sender);
+      return handleGetContent({ ...message, tabId: tabId }, sender);
 
     case 'openOptionsPage':
       return handleOpenOptionsPage();
 
     case 'openFullPage':
       return handleOpenFullPage(message);
+    
+    case 'getSummarizationState':
+      return TabStateManager.getState(tabId);
 
     default:
-      throw new Error('Unknown action');
+      // Don't throw for unknown messages, just return undefined so other listeners can handle it
+      // or check if it's a system message
+      if ((message as any).action === 'summarizationStateUpdated') return;
+      console.warn('Unknown action:', (message as any).action);
   }
 }
 
@@ -102,48 +177,71 @@ async function handleOpenFullPage(request: OpenFullPageRequest): Promise<Tabs.Ta
 /**
  * Handle summarize request
  */
-async function handleSummarize(request: SummarizeRequest): Promise<{ summary: string }> {
+async function handleSummarize(request: SummarizeRequest, tabId: number): Promise<{ summary: string | null, error?: string }> {
   const { content, url, title, forceRefresh } = request;
 
-  // Check cache first (skip if forceRefresh is true)
-  if (!forceRefresh) {
-    const cachedSummary = await CacheManager.get(url, content);
-    if (cachedSummary) {
-      console.log('Returning cached summary');
-      return { summary: cachedSummary };
+  const currentState = TabStateManager.getState(tabId);
+  
+  // If already loading, ignore request (debouncing/deduplication)
+  if (currentState.isLoading) {
+      console.log('Summarization already in progress for tab', tabId);
+      return { summary: currentState.summary }; // Return current (possibly null) summary
+  }
+
+  // Update state to loading
+  TabStateManager.updateState(tabId, { isLoading: true, error: null, pageContent: { content, url, title } });
+
+  try {
+    // Check cache first (skip if forceRefresh is true)
+    let summary: string | null = null;
+    
+    if (!forceRefresh) {
+      const cachedSummary = await CacheManager.get(url, content);
+      if (cachedSummary) {
+        console.log('Returning cached summary');
+        summary = cachedSummary;
+      }
+    } else {
+      console.log('Force refresh: bypassing cache');
     }
-  } else {
-    console.log('Force refresh: bypassing cache');
+
+    if (!summary) {
+        // Get settings
+        const settings = await StorageManager.getSettings();
+
+        // Validate API key
+        const apiKey = settings.apiProvider === 'gemini'
+            ? settings.geminiApiKey
+            : settings.openaiApiKey;
+
+        if (!apiKey) {
+            throw new Error(`Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`);
+        }
+
+        // Create API client
+        if (settings.apiProvider === 'gemini') {
+            const api = new GeminiAPI(apiKey, settings.geminiModel);
+            const prompt = settings.customPrompts?.summarize;
+            summary = await api.summarize(content, prompt);
+        } else {
+            const api = new OpenAIAPI(apiKey, settings.openaiModel);
+            const prompt = settings.customPrompts?.summarize;
+            summary = await api.summarize(content, prompt);
+        }
+
+        // Cache the summary
+        await CacheManager.set(url, content, summary);
+    }
+
+    // Update state with success
+    TabStateManager.updateState(tabId, { isLoading: false, summary: summary });
+    return { summary };
+
+  } catch (error: any) {
+    console.error('Summarization failed:', error);
+    TabStateManager.updateState(tabId, { isLoading: false, error: error.message || 'Failed to generate summary' });
+    throw error;
   }
-
-  // Get settings
-  const settings = await StorageManager.getSettings();
-
-  // Validate API key
-  const apiKey = settings.apiProvider === 'gemini'
-    ? settings.geminiApiKey
-    : settings.openaiApiKey;
-
-  if (!apiKey) {
-    throw new Error(`Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`);
-  }
-
-  // Create API client
-  let summary: string;
-  if (settings.apiProvider === 'gemini') {
-    const api = new GeminiAPI(apiKey, settings.geminiModel);
-    const prompt = settings.customPrompts?.summarize;
-    summary = await api.summarize(content, prompt);
-  } else {
-    const api = new OpenAIAPI(apiKey, settings.openaiModel);
-    const prompt = settings.customPrompts?.summarize;
-    summary = await api.summarize(content, prompt);
-  }
-
-  // Cache the summary
-  await CacheManager.set(url, content, summary);
-
-  return { summary };
 }
 
 /**
@@ -186,13 +284,20 @@ async function handleGetContent(
   request: GetContentRequest,
   sender: Runtime.MessageSender
 ): Promise<{ title: string; url: string; content: string; description: string }> {
-  // Get active tab
-  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-  const tabId = request.tabId || tabs[0]?.id;
+  // Use resolved tabId from request if available, otherwise find active tab
+  let tabId = request.tabId;
+  console.log('GetContent request for tab:', tabId);
+
+  if (!tabId) {
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    tabId = tabs[0]?.id;
+  }
 
   if (!tabId) {
     throw new Error('No active tab found');
   }
+
+  console.log('Executing script on tab:', tabId);
 
   // Execute content extraction in the tab
   const results = await browser.scripting.executeScript({

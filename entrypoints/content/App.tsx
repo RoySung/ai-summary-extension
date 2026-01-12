@@ -27,6 +27,8 @@ export default function App() {
 
     useEffect(() => {
         loadSettings();
+        initializeState();
+
         const handleStorageChange = (changes: any) => {
             if (changes.theme) {
                 setTheme(changes.theme.newValue);
@@ -35,13 +37,33 @@ export default function App() {
                 setShowFloatingBall(changes.showFloatingBall.newValue);
             }
         };
+
+        // Listen for state updates from background
+        const messageListener = (message: any) => {
+            if (message.action === 'summarizationStateUpdated' && message.state) {
+                const { isLoading, summary: newSummary, error: newError, pageContent: newPageContent } = message.state;
+                setLoading(isLoading);
+                if (newSummary !== undefined) setSummary(newSummary);
+                if (newError !== undefined) setError(newError);
+                if (newPageContent && !pageContent) setPageContent(newPageContent);
+            }
+        };
+
         browser.storage.onChanged.addListener(handleStorageChange);
-        return () => browser.storage.onChanged.removeListener(handleStorageChange);
+        browser.runtime.onMessage.addListener(messageListener);
+        
+        return () => {
+             browser.storage.onChanged.removeListener(handleStorageChange);
+             browser.runtime.onMessage.removeListener(messageListener);
+        };
     }, []);
 
     useEffect(() => {
         if (isExpanded) {
-            loadPageContent();
+            // Only load local content if we don't have it from state yet
+            if (!pageContent) {
+                 loadPageContent();
+            }
         }
     }, [isExpanded]);
 
@@ -49,6 +71,26 @@ export default function App() {
         const settings = await StorageManager.getSettings();
         setTheme(settings.theme);
         setShowFloatingBall(settings.showFloatingBall);
+    };
+
+    const initializeState = async () => {
+        try {
+            // Get synchronization state first
+            // Note: Since this is a content script, we can get state for our own tab ID easily
+            // But we need to know our own tab ID? Background handles "sender.tab.id".
+            // So calling sendMessage without ID is fine, background knows who we are.
+            const state = await browser.runtime.sendMessage({ action: 'getSummarizationState' });
+            if (state) {
+                setLoading(state.isLoading);
+                setSummary(state.summary);
+                setError(state.error);
+                if (state.pageContent) {
+                    setPageContent(state.pageContent);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to initialize state:', err);
+        }
     };
 
     const loadPageContent = async () => {
@@ -114,16 +156,19 @@ export default function App() {
                 forceRefresh,
             });
 
-            if (response.error) {
+            if (response && response.error) {
                 setError(response.error);
-            } else {
+                setLoading(false);
+            } else if (response && response.summary) {
                 setSummary(response.summary);
                 setMessages([]);
+                setLoading(false);
             }
+            // Otherwise wait for listener update
+            
         } catch (err: any) {
             console.error('Summarization error:', err);
             setError(err.message || 'Failed to generate summary');
-        } finally {
             setLoading(false);
         }
     };

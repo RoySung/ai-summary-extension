@@ -24,14 +24,51 @@ function App() {
 
   // Get current page content and settings on mount
   useEffect(() => {
-    loadPageContent();
     loadSettings();
+    initializeState();
+
+    // Listen for state updates from background
+    const messageListener = (message: any) => {
+        if (message.action === 'summarizationStateUpdated' && message.state) {
+            const { isLoading, summary: newSummary, error: newError, pageContent: newPageContent } = message.state;
+            setLoading(isLoading);
+            if (newSummary !== undefined) setSummary(newSummary);
+            if (newError !== undefined) setError(newError);
+            if (newPageContent && !pageContent) setPageContent(newPageContent);
+        }
+    };
+
+    browser.runtime.onMessage.addListener(messageListener);
+    return () => browser.runtime.onMessage.removeListener(messageListener);
   }, []);
 
   const loadSettings = async () => {
     const settings = await StorageManager.getSettings();
     setTheme(settings.theme);
     setShowFloatingBall(settings.showFloatingBall);
+  };
+
+  const initializeState = async () => {
+      try {
+          // Get synchronization state first
+          const state = await browser.runtime.sendMessage({ action: 'getSummarizationState' });
+          if (state) {
+              setLoading(state.isLoading);
+              setSummary(state.summary);
+              setError(state.error);
+              if (state.pageContent) {
+                  setPageContent(state.pageContent);
+              } else {
+                  // If no content in background state, load it locally
+                  loadPageContent();
+              }
+          } else {
+               loadPageContent();
+          }
+      } catch (err) {
+          console.error('Failed to initialize state:', err);
+          loadPageContent();
+      }
   };
 
   const toggleFloatingBall = async () => {
@@ -44,10 +81,13 @@ function App() {
 
     try {
       const response = await browser.runtime.sendMessage({ action: 'getContent' });
-      if (response.error) {
+      if (response && response.error) {
         setError(response.error);
-      } else {
+      } else if (response) {
         setPageContent(response);
+      } else {
+         // Fallback or just log if no response (maybe background script didn't reply)
+         console.warn('No response from background for getContent');
       }
     } catch (err: any) {
       console.error('Failed to load page content:', err);
@@ -60,11 +100,13 @@ function App() {
       setError('No page content available');
       return;
     }
-
+    
+    // Optimistically set loading, though background will confirm it
     setLoading(true);
     setError(null);
 
     try {
+      // Just send the message, state updates come via listener
       const response = await browser.runtime.sendMessage({
         action: 'summarize',
         content: pageContent.content,
@@ -73,16 +115,21 @@ function App() {
         forceRefresh,
       });
 
-      if (response.error) {
+      if (response && response.error) {
         setError(response.error);
-      } else {
-        setSummary(response.summary);
-        setMessages([]);
+        setLoading(false); // Manually turn off if immediate error
+      } 
+      // Do not manually set summary here, wait for event/broadcast
+      // But if response immediately contains summary (e.g. from cache), set it
+      if (response && response.summary) {
+           setSummary(response.summary);
+           setLoading(false);
+           setMessages([]); // Clear chat on new summary
       }
+
     } catch (err: any) {
       console.error('Summarization error:', err);
       setError(err.message || 'Failed to generate summary');
-    } finally {
       setLoading(false);
     }
   };
@@ -93,7 +140,9 @@ function App() {
     const userMessage: Message = { role: 'user', content: question };
     setMessages(prev => [...prev, userMessage]);
     setQuestion('');
-    setLoading(true);
+    setLoading(true); // Re-using loading state, or should it be separate? 
+    // Ideally chat loading is separate, but for now re-using is fine as long as we don't confuse it with summary loading.
+    // Actually, the original code used the same `loading` state.
     setError(null);
 
     try {

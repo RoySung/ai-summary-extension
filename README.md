@@ -1,143 +1,88 @@
 # AI Summary Chrome Extension
 
-A powerful Chrome extension that uses AI (Google Gemini or OpenAI) to summarize web pages and answer questions about their content.
+A powerful and elegant Chrome extension that leverages AI (Google Gemini or OpenAI) to summarize web pages and enable interactive Q&A about their content.
 
-## Features
+## ✨ Key Features
 
-✨ **Page Summarization** - Get concise summaries of any web page with one click  
-💬 **Interactive Q&A** - Ask follow-up questions about the page content  
-🔧 **Customizable** - Configure API providers, models, and prompts  
-📦 **Smart Caching** - Avoid redundant API calls with intelligent caching  
-🚀 **Chunking Support** - Handles long content by splitting into manageable chunks
+- **🚀 Instant Page Summarization**: Get concise, accurate summaries of any web page with a single click.
+- **💬 Interactive Q&A Chat**: Have a conversation with the AI about the page content. Ask specific questions and get answers based on the context.
+- **🎯 Floating Mode**: A non-intrusive floating ball allows quick access to the summarizer. It expands into a fully **resizable window**, letting you browse and read summaries side-by-side.
+- **📄 Full Page View**: Switch to a dedicated immersive view for reading long summaries or managing complex Q&A sessions.
+- **🎨 Theme Selection**: Customize the look and feel with built-in themes:
+  - **Warm**: A cozy orange-based theme.
+  - **Cool**: A sleek blue/purple-based theme.
 
-## Supported AI Providers
+## 🤖 Supported AI Providers
 
-- **Google Gemini** (gemini-2.0-flash-exp, gemini-1.5-pro, gemini-1.5-flash)
-- **OpenAI** (GPT-4o, GPT-4o Mini, GPT-4 Turbo)
+- **Google Gemini** (Recommended for free tier users)
+  - Models: gemini-2.5-flash, gemini-3-flash-preview, gemini-3-pro-preview
+- **OpenAI**
+  - Models: GPT-4o, GPT-4o Mini, GPT-4 Turbo
 
-## Installation
+## 🛠️ Installation
 
 ### Development Mode
 
-1. Clone or download this repository
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-3. Start the development server:
-   ```bash
-   pnpm dev
-   ```
-4. The extension will automatically load in Chrome
+1.  Clone this repository.
+2.  Install dependencies:
+    ```bash
+    pnpm install
+    ```
+3.  Start the development server:
+    ```bash
+    pnpm dev
+    ```
+    Chrome will open with the extension loaded.
 
 ### Production Build
 
-1. Build the extension:
-   ```bash
-   pnpm build
-   ```
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" (toggle in top-right)
-4. Click "Load unpacked"
-5. Select the `.output/chrome-mv3` directory
+1.  Build the extension:
+    ```bash
+    pnpm build
+    ```
+2.  Load in Chrome:
+    - Open `chrome://extensions/`
+    - Enable **Developer mode**
+    - Click **Load unpacked**
+    - Select the `.output/chrome-mv3` directory
 
-## Setup
+## ⚙️ Setup & Configuration
 
-1. Click the extension icon in your browser
-2. Click the settings (⚙️) button
-3. Choose your AI provider (Gemini or OpenAI)
-4. Enter your API key:
-   - **Gemini**: Get from [Google AI Studio](https://aistudio.google.com/apikey)
-   - **OpenAI**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
-5. Select your preferred model
-6. Click "Save Settings"
+1.  **Open the Extension**: Click the extension icon or the floating ball.
+2.  **Go to Settings**: Click the gear icon (⚙️) in the header.
+3.  **Choose Provider**: Select Google Gemini or OpenAI.
+4.  **Enter API Key**:
+    - **Gemini**: Get it from [Google AI Studio](https://aistudio.google.com/apikey).
+    - **OpenAI**: Get it from [OpenAI Platform](https://platform.openai.com/api-keys).
+5.  **Select Theme**: Choose your preferred visual style (Warm or Cool).
+6.  **Custom Prompts** (Optional): Customize the instructions for summarization and Q&A to fit your specific needs.
+7.  **Floating Ball**: You can toggle the visibility of the floating ball on specific pages if desired.
 
-## Usage
+## 📖 Usage Guide
 
-### Summarizing a Page
+### Using the Floating Window
+1.  A floating ball appears on web pages (enabled by default).
+2.  Click to expand it into a window.
+3.  **Resize**: Drag the edges of the window to resize it to your liking.
+4.  **Summarize**: Click "✨ Summarize Page" to start.
+5.  **Chat**: Type in the input box to ask follow-up questions.
 
-1. Navigate to any web page
-2. Click the extension icon
-3. Click "✨ Summarize Page"
-4. Wait for the AI to generate a summary
+### Full Page View
+For a deeper dive, click the **"📄 Full Page"** button within the summary view. This opens a dedicated tab with your current summary and chat history, giving you more space to think and read.
 
-### Asking Questions
+## 💻 Tech Stack
 
-1. After generating a summary
-2. Type your question in the input field
-3. Press Enter or click the send button (➤)
-4. The AI will answer based on the page content and summary
-
-### Custom Prompts
-
-1. Open extension settings
-2. Scroll to "Custom Prompts"
-3. Edit the summarization or Q&A prompts
-4. Use placeholders:
-   - `{content}` - Page content
-   - `{context}` - Page context
-   - `{summary}` - Generated summary
-   - `{question}` - User's question
-5. Click "Save Settings"
-
-### Cache Management
-
-Summaries are cached for 24 hours to save API costs:
-
-- To clear the cache: Go to settings → Click "Clear Cache"
-- Cache clears automatically when expired
-
-## Project Structure
-
-```
-ai-summary-extension/
-├── api/                    # API integrations
-│   ├── gemini.ts          # Gemini API client
-│   └── openai.ts          # OpenAI API client
-├── entrypoints/           # Extension entry points
-│   ├── background.ts      # Service worker
-│   ├── content.ts         # Content script
-│   ├── popup/             # Popup UI
-│   └── options/           # Settings page
-├── utils/                 # Utility modules
-│   ├── cache.ts           # Caching logic
-│   ├── chunking.ts        # Content chunking
-│   ├── constants.ts       # Constants and config
-│   └── storage.ts         # Settings storage
-└── wxt.config.ts          # WXT configuration
-```
-
-## Technologies
-
-- **Framework**: [WXT](https://wxt.dev/) - Modern Chrome extension framework
-- **UI**: React 19 with TypeScript
-- **Styling**: CSS with modern gradients and animations
+- **Framework**: [WXT](https://wxt.dev/) - Next-gen Web Extension Framework
+- **Frontend**: React 19, TypeScript
+- **Styling**: Modern CSS Variables, CSS Modules
 - **Build Tool**: Vite
-- **APIs**: Google Gemini AI & OpenAI
+- **AI Integration**: Gemini API, OpenAI API
+- **State Management**: Custom background state synchronization
 
-## Development Commands
-
-```bash
-# Start dev server (auto-reloads on changes)
-pnpm dev
-
-# Build for production (Chrome)
-pnpm build
-
-# Build for Firefox
-pnpm build:firefox
-
-# Create distribution zip
-pnpm zip
-
-# Type checking
-pnpm compile
-```
-
-## License
+## 📄 License
 
 MIT
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

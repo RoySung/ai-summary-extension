@@ -6,9 +6,8 @@ export const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 export const MODELS = {
     GEMINI: {
         'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', maxTokens: 32000 },
-        'gemini-2.0-flash-exp': { name: 'Gemini 2.0 Flash', maxTokens: 32000 },
-        'gemini-1.5-pro': { name: 'Gemini 1.5 Pro', maxTokens: 128000 },
-        'gemini-1.5-flash': { name: 'Gemini 1.5 Flash', maxTokens: 32000 },
+        'gemini-3-flash-preview': { name: 'Gemini 3 Flash Preview', maxTokens: 32000 },
+        'gemini-3-pro-preview': { name: 'Gemini 3 Pro Preview', maxTokens: 128000 },
     },
     OPENAI: {
         'gpt-4o': { name: 'GPT-4o', maxTokens: 8000 },

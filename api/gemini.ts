@@ -1,25 +1,16 @@
-import { GEMINI_API_ENDPOINT } from '../utils/constants';
+import { GoogleGenAI } from '@google/genai';
+import { MODELS } from '../utils/constants';
 import { splitIntoChunks } from '../utils/chunking';
-
-export interface GeminiResponse {
-    candidates: Array<{
-        content: {
-            parts: Array<{
-                text: string;
-            }>;
-        };
-    }>;
-}
 
 /**
  * Gemini API client
  */
 export class GeminiAPI {
-    private apiKey: string;
+    private ai: GoogleGenAI;
     private model: string;
 
     constructor(apiKey: string, model: string = 'gemini-2.5-flash') {
-        this.apiKey = apiKey;
+        this.ai = new GoogleGenAI({ apiKey });
         this.model = model;
     }
 
@@ -27,38 +18,32 @@ export class GeminiAPI {
      * Generate content using Gemini API
      */
     async generateContent(prompt: string): Promise<string> {
-        const url = `${GEMINI_API_ENDPOINT}/${this.model}:generateContent?key=${this.apiKey}`;
+        const modelConfig = MODELS.GEMINI[this.model as keyof typeof MODELS.GEMINI];
+        const maxOutputTokens = modelConfig?.maxOutput || 8192;
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
+        try {
+            const response = await this.ai.models.generateContent({
+                model: this.model,
+                contents: prompt,
+                config: {
                     temperature: 0.7,
-                    maxOutputTokens: 8192, // Increased token limit
-                },
-            }),
-        });
+                    maxOutputTokens,
+                }
+            });
 
-        if (!response.ok) {
-            const error = await response.text();
-            throw new Error(`Gemini API error: ${response.status} - ${error}`);
+            const text = response.text;
+            
+            if (!text) {
+                throw new Error('No response from Gemini API');
+            }
+
+            return text;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Gemini API error: ${error.message}`);
+            }
+            throw new Error('Unknown Gemini API error');
         }
-
-        const data: GeminiResponse = await response.json();
-
-        if (!data.candidates || data.candidates.length === 0) {
-            throw new Error('No response from Gemini API');
-        }
-
-        return data.candidates[0].content.parts[0].text;
     }
 
     /**
@@ -82,14 +67,22 @@ export class GeminiAPI {
 
     /**
      * Summarize content with proactive chunking strategy
-     * 1. Check content length
-     * 2. If too long, split into chunks
-     * 3. Summarize each chunk
-     * 4. Create final summary from all chunk summaries
+     * 
+     * Gemini 2.5 Flash supports up to 1M token context window.
+     * We use 500K as a safe limit to leave room for output and prompt overhead.
+     * This means most content will fit in a single request without chunking.
+     * 
+     * For extremely long content that exceeds 500K tokens:
+     * 1. Split into chunks
+     * 2. Summarize each chunk
+     * 3. Create final summary from all chunk summaries
      */
     async summarize(content: string, customPrompt?: string): Promise<string> {
-        // Conservative token limit to avoid truncation
-        const maxInputTokens = 6000; // Leave room for response
+        const modelConfig = MODELS.GEMINI[this.model as keyof typeof MODELS.GEMINI];
+        // Default to conservative 500k if config not found (shouldn't happen)
+        const contextWindow = modelConfig?.contextWindow || 1000000;
+        // Use 90% of context window as safe limit, leaving room for output and prompt overhead
+        const maxInputTokens = Math.floor(contextWindow * 0.9);
         const chunks = splitIntoChunks(content, maxInputTokens);
 
         // Single chunk - direct summarization
@@ -101,8 +94,8 @@ export class GeminiAPI {
             return await this.generateContent(prompt);
         }
 
-        // Multi-chunk processing with progress reporting
-        console.log(`📚 Content is long, splitting into ${chunks.length} chunks for processing...`);
+        // Multi-chunk processing (rarely needed with 500K token limit)
+        console.log(`📚 Content is exceptionally long (${chunks.length} chunks), processing in parts...`);
         const chunkSummaries: string[] = [];
 
         for (let i = 0; i < chunks.length; i++) {

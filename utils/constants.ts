@@ -1,25 +1,18 @@
 // API Endpoints
-export const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 export const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
 // Model Configurations
 export const MODELS = {
     GEMINI: {
-        'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', maxTokens: 32000 },
-        'gemini-3-flash-preview': { name: 'Gemini 3 Flash Preview', maxTokens: 32000 },
-        'gemini-3-pro-preview': { name: 'Gemini 3 Pro Preview', maxTokens: 128000 },
+        'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', contextWindow: 1000000, maxOutput: 8192 },
+        'gemini-3-flash-preview': { name: 'Gemini 3 Flash Preview', contextWindow: 1000000, maxOutput: 8192 },
+        'gemini-3-pro-preview': { name: 'Gemini 3 Pro Preview', contextWindow: 2000000, maxOutput: 8192 },
     },
     OPENAI: {
-        'gpt-4o': { name: 'GPT-4o', maxTokens: 8000 },
-        'gpt-4o-mini': { name: 'GPT-4o Mini', maxTokens: 8000 },
-        'gpt-4-turbo': { name: 'GPT-4 Turbo', maxTokens: 8000 },
+        'gpt-4o': { name: 'GPT-4o', contextWindow: 128000, maxOutput: 16384 },
+        'gpt-4o-mini': { name: 'GPT-4o Mini', contextWindow: 128000, maxOutput: 16384 },
+        'gpt-4-turbo': { name: 'GPT-4 Turbo', contextWindow: 128000, maxOutput: 4096 },
     },
-};
-
-// Token Limits (conservative estimates to leave room for response)
-export const TOKEN_LIMITS = {
-    GEMINI_INPUT: 30000,
-    OPENAI_INPUT: 7000,
 };
 
 // Default Prompts

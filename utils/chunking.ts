@@ -1,4 +1,3 @@
-import { TOKEN_LIMITS } from './constants';
 import { encode } from 'gpt-tokenizer';
 
 /**
@@ -78,9 +77,4 @@ export function splitIntoChunks(
     return chunks;
 }
 
-/**
- * Get appropriate token limit based on provider
- */
-export function getTokenLimit(provider: 'gemini' | 'openai'): number {
-    return provider === 'gemini' ? TOKEN_LIMITS.GEMINI_INPUT : TOKEN_LIMITS.OPENAI_INPUT;
-}
+

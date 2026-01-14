@@ -1,4 +1,4 @@
-import { OPENAI_API_ENDPOINT } from '../utils/constants';
+import { OPENAI_API_ENDPOINT, MODELS } from '../utils/constants';
 import { splitIntoChunks } from '../utils/chunking';
 
 export interface OpenAIMessage {
@@ -30,6 +30,9 @@ export class OpenAIAPI {
      * Generate content using OpenAI API
      */
     async generateContent(messages: OpenAIMessage[]): Promise<string> {
+        const modelConfig = MODELS.OPENAI[this.model as keyof typeof MODELS.OPENAI];
+        const maxTokens = modelConfig?.maxOutput || 4096;
+
         const response = await fetch(OPENAI_API_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -40,7 +43,7 @@ export class OpenAIAPI {
                 model: this.model,
                 messages,
                 temperature: 0.7,
-                max_tokens: 4096,
+                max_tokens: maxTokens,
             }),
         });
 
@@ -67,8 +70,11 @@ export class OpenAIAPI {
      * 4. Create final summary from all chunk summaries
      */
     async summarize(content: string, customPrompt?: string): Promise<string> {
-        // Conservative token limit to avoid truncation
-        const maxInputTokens = 5000; // Leave room for response (OpenAI is more conservative)
+        const modelConfig = MODELS.OPENAI[this.model as keyof typeof MODELS.OPENAI];
+        // Default to conservative 5000 if config not found (shouldn't happen)
+        const contextWindow = modelConfig?.contextWindow || 128000;
+        // Use 90% of context window as safe limit
+        const maxInputTokens = Math.floor(contextWindow * 0.9);
         const chunks = splitIntoChunks(content, maxInputTokens);
 
         // Single chunk - direct summarization

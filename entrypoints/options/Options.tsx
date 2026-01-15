@@ -7,6 +7,7 @@ import icon from '../../assets/icon.png';
 
 
 function Options() {
+    const version = browser.runtime.getManifest().version;
     const [settings, setSettings] = useState<Settings>({
         apiProvider: 'gemini',
         geminiApiKey: '',
@@ -59,7 +60,10 @@ function Options() {
         <div className="options-container" data-theme={settings.theme}>
             <header className="options-header">
                 <div className="header-content">
-                    <h1>AI Summary - Settings</h1>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <h1 style={{ margin: 0 }}>AI Summary - Settings</h1>
+                        <small style={{ fontSize: '12px', opacity: 0.6, marginTop: '2px' }}>v{version}</small>
+                    </div>
                 </div>
             </header>
 

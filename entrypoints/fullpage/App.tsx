@@ -6,7 +6,6 @@ import icon from '../../assets/icon.png';
 import '../../assets/theme.css';
 import './style.css';
 
-
 interface Message {
     role: 'user' | 'assistant';
     content: string;
@@ -21,6 +20,7 @@ interface StoredData {
 }
 
 export default function FullPage() {
+    const version = browser.runtime.getManifest().version;
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [summary, setSummary] = useState<string>('');
@@ -75,12 +75,11 @@ export default function FullPage() {
         setTheme(settings.theme);
     };
 
-
     const handleAskQuestion = async () => {
         if (!question.trim() || !summary || !pageContent) return;
 
         const userMessage: Message = { role: 'user', content: question };
-        setMessages(prev => [...prev, userMessage]);
+        setMessages((prev) => [...prev, userMessage]);
         setQuestion('');
         setLoading(true);
         setError(null);
@@ -96,8 +95,11 @@ export default function FullPage() {
             if (response.error) {
                 setError(response.error);
             } else {
-                const assistantMessage: Message = { role: 'assistant', content: response.answer };
-                setMessages(prev => [...prev, assistantMessage]);
+                const assistantMessage: Message = {
+                    role: 'assistant',
+                    content: response.answer,
+                };
+                setMessages((prev) => [...prev, assistantMessage]);
             }
         } catch (err: any) {
             console.error('Question error:', err);
@@ -151,11 +153,33 @@ export default function FullPage() {
             <header className="fullpage-header">
                 <div className="header-content">
                     <div className="logo-container">
-                        <img src={icon} alt="AI Summary" className="logo-icon" />
-                        <h1>AI Summary</h1>
+                        <img
+                            src={icon}
+                            alt="AI Summary"
+                            className="logo-icon"
+                        />
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <h1 style={{ margin: 0, lineHeight: '1.2' }}>
+                                AI Summary
+                            </h1>
+                            <small style={{ fontSize: '12px', opacity: 0.6 }}>
+                                v{version}
+                            </small>
+                        </div>
                     </div>
                     {pageUrl && (
-                        <a href={pageUrl} target="_blank" rel="noopener noreferrer" className="page-link">
+                        <a
+                            href={pageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="page-link"
+                        >
                             Visit Original Page ↗
                         </a>
                     )}
@@ -184,7 +208,9 @@ export default function FullPage() {
                                     disabled={loading}
                                     className="secondary-btn"
                                 >
-                                    {loading ? 'Re-summarizing...' : '🔄 Re-summarize'}
+                                    {loading
+                                        ? 'Re-summarizing...'
+                                        : '🔄 Re-summarize'}
                                 </button>
                             </div>
                             <div className="summary-content-wrapper">
@@ -200,9 +226,14 @@ export default function FullPage() {
                             {messages.length > 0 && (
                                 <div className="messages">
                                     {messages.map((msg, idx) => (
-                                        <div key={idx} className={`message ${msg.role}`}>
+                                        <div
+                                            key={idx}
+                                            className={`message ${msg.role}`}
+                                        >
                                             <div className="message-content markdown-content">
-                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                                <ReactMarkdown>
+                                                    {msg.content}
+                                                </ReactMarkdown>
                                             </div>
                                         </div>
                                     ))}
@@ -213,7 +244,9 @@ export default function FullPage() {
                                 <input
                                     type="text"
                                     value={question}
-                                    onChange={(e) => setQuestion(e.target.value)}
+                                    onChange={(e) =>
+                                        setQuestion(e.target.value)
+                                    }
                                     onKeyPress={handleKeyPress}
                                     placeholder="Ask a question about this page..."
                                     disabled={loading}

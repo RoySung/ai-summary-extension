@@ -14,6 +14,7 @@ interface Message {
 }
 
 export default function App() {
+    const version = browser.runtime.getManifest().version;
     const [isExpanded, setIsExpanded] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -272,7 +273,11 @@ export default function App() {
                 />
                 <div className="ai-summary-header">
                     <div className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <h2 className="ai-summary-title">AI Summary</h2>
+                        <img src={icon} alt="AI Summary" className="logo-icon" style={{ width: '24px', height: '24px' }} />
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <h2 className="ai-summary-title" style={{ margin: 0, lineHeight: '1.2' }}>AI Summary</h2>
+                            <small style={{ fontSize: '10px', opacity: 0.6 }}>v{version}</small>
+                        </div>
                     </div>
                     <div className="ai-summary-actions">
                         <button className="settings-btn" onClick={openSettings} title="Settings" style={{ fontSize: '16px' }}>

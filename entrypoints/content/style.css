@@ -3,7 +3,8 @@
     bottom: 20px;
     right: 20px;
     z-index: 99999;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
 }
 
 /* Floating Ball */
@@ -12,7 +13,8 @@
     height: 42px;
     border-radius: 50%;
     background: linear-gradient(135deg, #3b82f6, #2563eb);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -25,7 +27,8 @@
 
 .ai-summary-floating-ball:hover {
     transform: scale(1.1);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .ai-summary-floating-ball svg {
@@ -39,7 +42,8 @@
     height: 500px;
     background: var(--bg-gradient);
     border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -62,7 +66,7 @@
 
 /* Optional: Add a visual indicator for the handle on hover */
 .ai-summary-resize-handle::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 4px;
     left: 4px;
@@ -98,13 +102,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    color: var(--text-primary);
 }
 
 .ai-summary-title {
-    font-weight: 600;
-    color: var(--text-white);
-    font-size: 16px;
     margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    background: var(--header-text-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
 }
 
 .ai-summary-actions {
@@ -129,7 +138,6 @@
     background: var(--secondary-bg);
     color: var(--text-white);
 }
-
 
 /* Content RWD */
 .ai-summary-content {

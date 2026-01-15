@@ -17,6 +17,7 @@ interface StoredData {
     pageTitle: string;
     pageUrl: string;
     messages?: Message[];
+    isSelection?: boolean;
 }
 
 export default function FullPage() {
@@ -30,6 +31,7 @@ export default function FullPage() {
     const [pageTitle, setPageTitle] = useState('');
     const [pageUrl, setPageUrl] = useState('');
     const [theme, setTheme] = useState<Theme>('warm');
+    const [isSelection, setIsSelection] = useState(false);
 
     useEffect(() => {
         if (pageTitle) {
@@ -46,18 +48,30 @@ export default function FullPage() {
                 // Get ID from URL
                 const params = new URLSearchParams(window.location.search);
                 const id = params.get('id');
+                const auto = params.get('auto');
                 const storageKey = id ? `fullPageData_${id}` : 'fullPageData';
 
                 const result = await browser.storage.local.get(storageKey);
                 const data = result[storageKey];
 
                 if (data) {
-                    setSummary(data.summary);
                     setPageContent(data.pageContent);
                     setPageTitle(data.pageTitle);
                     setPageUrl(data.pageUrl);
+                    if (data.isSelection) setIsSelection(true);
                     if (data.messages) {
                         setMessages(data.messages);
+                    }
+
+                    if (data.summary) {
+                        setSummary(data.summary);
+                    } else if (auto === 'true' && data.pageContent) {
+                        // Auto summarize if requested and no summary exists
+                        performSummarize(
+                            data.pageContent.content,
+                            data.pageUrl,
+                            data.pageTitle
+                        );
                     }
                 } else {
                     setError('No data found. Please generate a summary first.');
@@ -69,6 +83,55 @@ export default function FullPage() {
         };
         loadData();
     }, []);
+
+    const performSummarize = async (
+        content: string,
+        url: string,
+        title: string,
+        forceRefresh: boolean = false
+    ) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await browser.runtime.sendMessage({
+                action: 'summarize',
+                content: content,
+                url: url,
+                title: title,
+                forceRefresh: forceRefresh,
+            });
+
+            if (response.error) {
+                setError(response.error);
+            } else {
+                setSummary(response.summary);
+                setMessages([]);
+
+                // Update storage with new summary
+                const params = new URLSearchParams(window.location.search);
+                const id = params.get('id');
+                if (id) {
+                    const storageKey = `fullPageData_${id}`;
+                    const result = await browser.storage.local.get(storageKey);
+                    const data = result[storageKey];
+                    if (data) {
+                        await browser.storage.local.set({
+                            [storageKey]: {
+                                ...data,
+                                summary: response.summary,
+                            },
+                        });
+                    }
+                }
+            }
+        } catch (err: any) {
+            console.error('Summarization error:', err);
+            setError(err.message || 'Failed to generate summary');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const loadSettings = async () => {
         const settings = await StorageManager.getSettings();
@@ -121,31 +184,7 @@ export default function FullPage() {
             setError('No page content available');
             return;
         }
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await browser.runtime.sendMessage({
-                action: 'summarize',
-                content: pageContent.content,
-                url: pageUrl,
-                title: pageTitle,
-                forceRefresh: true,
-            });
-
-            if (response.error) {
-                setError(response.error);
-            } else {
-                setSummary(response.summary);
-                setMessages([]);
-            }
-        } catch (err: any) {
-            console.error('Summarization error:', err);
-            setError(err.message || 'Failed to generate summary');
-        } finally {
-            setLoading(false);
-        }
+        await performSummarize(pageContent.content, pageUrl, pageTitle, true);
     };
 
     return (
@@ -191,6 +230,34 @@ export default function FullPage() {
                     <h2>{pageTitle || 'Loading...'}</h2>
                     {pageUrl && <p className="page-url">{pageUrl}</p>}
                 </div>
+
+                {/* Show source text if it's a selection summary */}
+                {isSelection && pageContent && (
+                    <div
+                        className="source-content-section"
+                        style={{
+                            marginBottom: '20px',
+                            padding: '15px',
+                            background: 'var(--bg-secondary)',
+                            borderRadius: '8px',
+                        }}
+                    >
+                        <h3 style={{ marginTop: 0, fontSize: '1.1em' }}>
+                            Source Text
+                        </h3>
+                        <div
+                            style={{
+                                maxHeight: '200px',
+                                overflowY: 'auto',
+                                whiteSpace: 'pre-wrap',
+                                fontSize: '0.9em',
+                                opacity: 0.8,
+                            }}
+                        >
+                            {pageContent.content}
+                        </div>
+                    </div>
+                )}
 
                 {error && (
                     <div className="error">

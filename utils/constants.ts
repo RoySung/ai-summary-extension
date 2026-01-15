@@ -1,17 +1,42 @@
 // API Endpoints
 export const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
+export const CONTEXT_MENU_IDS = {
+    SUMMARIZE_SELECTION: 'summarize-selection',
+    SUMMARIZE_FULL_PAGE: 'summarize-full-page',
+} as const;
+
 // Model Configurations
 export const MODELS = {
     GEMINI: {
-        'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', contextWindow: 1000000, maxOutput: 8192 },
-        'gemini-3-flash-preview': { name: 'Gemini 3 Flash Preview', contextWindow: 1000000, maxOutput: 8192 },
-        'gemini-3-pro-preview': { name: 'Gemini 3 Pro Preview', contextWindow: 2000000, maxOutput: 8192 },
+        'gemini-2.5-flash': {
+            name: 'Gemini 2.5 Flash',
+            maxInput: 1000000,
+            maxOutput: 8192,
+        },
+        'gemini-3-flash-preview': {
+            name: 'Gemini 3 Flash Preview',
+            maxInput: 1000000,
+            maxOutput: 8192,
+        },
+        'gemini-3-pro-preview': {
+            name: 'Gemini 3 Pro Preview',
+            maxInput: 2000000,
+            maxOutput: 8192,
+        },
     },
     OPENAI: {
-        'gpt-4o': { name: 'GPT-4o', contextWindow: 128000, maxOutput: 16384 },
-        'gpt-4o-mini': { name: 'GPT-4o Mini', contextWindow: 128000, maxOutput: 16384 },
-        'gpt-4-turbo': { name: 'GPT-4 Turbo', contextWindow: 128000, maxOutput: 4096 },
+        'gpt-4o': { name: 'GPT-4o', maxInput: 128000, maxOutput: 16384 },
+        'gpt-4o-mini': {
+            name: 'GPT-4o Mini',
+            maxInput: 128000,
+            maxOutput: 16384,
+        },
+        'gpt-4-turbo': {
+            name: 'GPT-4 Turbo',
+            maxInput: 128000,
+            maxOutput: 4096,
+        },
     },
 };
 

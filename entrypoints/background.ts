@@ -2,354 +2,494 @@ import { GeminiAPI } from '../api/gemini';
 import { OpenAIAPI } from '../api/openai';
 import { StorageManager } from '../utils/storage';
 import { CacheManager } from '../utils/cache';
+import { CONTEXT_MENU_IDS } from '../utils/constants';
 import type { Runtime, Tabs } from 'webextension-polyfill';
 
 export default defineBackground(() => {
-  console.log('AI Summary background worker initialized');
+    console.log('AI Summary background worker initialized');
 
-  // Clean expired cache entries on startup
-  CacheManager.cleanExpired();
+    // Clean expired cache entries on startup
+    CacheManager.cleanExpired();
 
-  // Message handler
-  browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    handleMessage(message, sender)
-      .then(sendResponse)
-      .catch((error) => {
-        console.error('Error handling message:', error);
-        sendResponse({ error: error.message });
-      });
+    // Set up context menus
+    browser.runtime.onInstalled.addListener(() => {
+        browser.contextMenus.create({
+            id: CONTEXT_MENU_IDS.SUMMARIZE_SELECTION,
+            title: 'Summarize Selection',
+            contexts: ['selection'],
+        });
+        browser.contextMenus.create({
+            id: CONTEXT_MENU_IDS.SUMMARIZE_FULL_PAGE,
+            title: 'Summarize Full Page',
+            contexts: ['page'],
+        });
+    });
 
-    // Return true to indicate async response
-    return true;
-  });
+    // Handle context menu clicks
+    browser.contextMenus.onClicked.addListener(async (info, tab) => {
+        if (!tab?.id) return;
+
+        if (
+            info.menuItemId === CONTEXT_MENU_IDS.SUMMARIZE_SELECTION &&
+            info.selectionText
+        ) {
+            console.log('Context menu: Summarize selection');
+
+            const id =
+                Date.now().toString(36) +
+                Math.random().toString(36).substring(2);
+            const data = {
+                summary: null,
+                pageContent: {
+                    content: info.selectionText,
+                    url: tab.url || '',
+                    title: tab.title || '',
+                },
+                pageTitle: `Selected Text: ${tab.title || 'Unknown Page'}`,
+                pageUrl: tab.url || '',
+                isSelection: true,
+            };
+
+            await browser.storage.local.set({ [`fullPageData_${id}`]: data });
+
+            const fullPageUrl = browser.runtime.getURL(
+                `/fullpage.html?id=${id}&auto=true`
+            );
+            browser.tabs.create({ url: fullPageUrl });
+        } else if (info.menuItemId === CONTEXT_MENU_IDS.SUMMARIZE_FULL_PAGE) {
+            console.log('Context menu: Summarize full page');
+            try {
+                const contentData = await handleGetContent(
+                    { action: 'getContent', tabId: tab.id },
+                    {} as any
+                );
+
+                const id =
+                    Date.now().toString(36) +
+                    Math.random().toString(36).substring(2);
+                const data = {
+                    summary: null,
+                    pageContent: contentData,
+                    pageTitle: contentData.title,
+                    pageUrl: contentData.url,
+                };
+
+                await browser.storage.local.set({
+                    [`fullPageData_${id}`]: data,
+                });
+
+                const fullPageUrl = browser.runtime.getURL(
+                    `/fullpage.html?id=${id}&auto=true`
+                );
+                browser.tabs.create({ url: fullPageUrl });
+            } catch (error) {
+                console.error(
+                    'Failed to handle full page summary from context menu:',
+                    error
+                );
+            }
+        }
+    });
+
+    // Message handler
+    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        handleMessage(message, sender)
+            .then(sendResponse)
+            .catch((error) => {
+                console.error('Error handling message:', error);
+                sendResponse({ error: error.message });
+            });
+
+        // Return true to indicate async response
+        return true;
+    });
 });
 
 interface TabState {
-  isLoading: boolean;
-  summary: string | null;
-  error: string | null;
-  pageContent: any | null;
+    isLoading: boolean;
+    summary: string | null;
+    error: string | null;
+    pageContent: any | null;
 }
 
 // State manager for tabs
 class TabStateManager {
-  private static states: Map<number, TabState> = new Map();
+    private static states: Map<number, TabState> = new Map();
 
-  static getState(tabId: number): TabState {
-    if (!this.states.has(tabId)) {
-      this.states.set(tabId, {
-        isLoading: false,
-        summary: null,
-        error: null,
-        pageContent: null
-      });
+    static getState(tabId: number): TabState {
+        if (!this.states.has(tabId)) {
+            this.states.set(tabId, {
+                isLoading: false,
+                summary: null,
+                error: null,
+                pageContent: null,
+            });
+        }
+        return this.states.get(tabId)!;
     }
-    return this.states.get(tabId)!;
-  }
 
-  static updateState(tabId: number, update: Partial<TabState>) {
-    const currentState = this.getState(tabId);
-    const newState = { ...currentState, ...update };
-    this.states.set(tabId, newState);
-    this.broadcastState(tabId, newState);
-  }
+    static updateState(tabId: number, update: Partial<TabState>) {
+        const currentState = this.getState(tabId);
+        const newState = { ...currentState, ...update };
+        this.states.set(tabId, newState);
+        this.broadcastState(tabId, newState);
+    }
 
-  private static broadcastState(tabId: number, state: TabState) {
-    // Send message to all frames in the tab (popup, content script)
-    browser.runtime.sendMessage({
-      action: 'summarizationStateUpdated',
-      tabId,
-      state
-    }).catch(() => {
-        // Ignore errors if no receivers (e.g. popup closed)
-    });
+    private static broadcastState(tabId: number, state: TabState) {
+        // Send message to all frames in the tab (popup, content script)
+        browser.runtime
+            .sendMessage({
+                action: 'summarizationStateUpdated',
+                tabId,
+                state,
+            })
+            .catch(() => {
+                // Ignore errors if no receivers (e.g. popup closed)
+            });
 
-    // Also try to send to the specific tab content script
-    browser.tabs.sendMessage(tabId, {
-       action: 'summarizationStateUpdated',
-       tabId,
-       state
-    }).catch(() => {
-      // Ignore errors if content script not ready
-    });
-  }
+        // Also try to send to the specific tab content script
+        browser.tabs
+            .sendMessage(tabId, {
+                action: 'summarizationStateUpdated',
+                tabId,
+                state,
+            })
+            .catch(() => {
+                // Ignore errors if content script not ready
+            });
+    }
 }
 
 interface SummarizeRequest {
-  action: 'summarize';
-  content: string;
-  url: string;
-  title: string;
-  forceRefresh?: boolean;
+    action: 'summarize';
+    content: string;
+    url: string;
+    title: string;
+    forceRefresh?: boolean;
 }
 
 interface QuestionRequest {
-  action: 'question';
-  question: string;
-  context: string;
-  summary: string;
+    action: 'question';
+    question: string;
+    context: string;
+    summary: string;
 }
 
 interface GetContentRequest {
-  action: 'getContent';
-  tabId?: number;
+    action: 'getContent';
+    tabId?: number;
 }
 
 interface OpenOptionsPageRequest {
-  action: 'openOptionsPage';
+    action: 'openOptionsPage';
 }
 
 interface OpenFullPageRequest {
-  action: 'openFullPage';
-  url: string;
+    action: 'openFullPage';
+    url: string;
 }
 
 interface GetSummarizationStateRequest {
-  action: 'getSummarizationState';
+    action: 'getSummarizationState';
 }
 
-type MessageRequest = SummarizeRequest | QuestionRequest | GetContentRequest | OpenOptionsPageRequest | OpenFullPageRequest | GetSummarizationStateRequest;
+type MessageRequest =
+    | SummarizeRequest
+    | QuestionRequest
+    | GetContentRequest
+    | OpenOptionsPageRequest
+    | OpenFullPageRequest
+    | GetSummarizationStateRequest;
 
 /**
  * Handle incoming messages
  */
 async function handleMessage(
-  message: MessageRequest,
-  sender: Runtime.MessageSender
+    message: MessageRequest,
+    sender: Runtime.MessageSender
 ): Promise<any> {
-  // Use sender.tab.id for content scripts, or derive from active tab for popup
-  let tabId = sender.tab?.id;
-  
-  if (!tabId) {
-      // If message is from Popup (no sender.tab), get the active tab
-      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-      tabId = tabs[0]?.id;
-  }
+    // Use sender.tab.id for content scripts, or derive from active tab for popup
+    let tabId = sender.tab?.id;
 
-  if (!tabId) {
-      console.warn('Could not determine tab ID for message:', message);
-      return { error: 'Could not determine active tab' };
-  }
+    if (!tabId) {
+        // If message is from Popup (no sender.tab), get the active tab
+        const tabs = await browser.tabs.query({
+            active: true,
+            currentWindow: true,
+        });
+        tabId = tabs[0]?.id;
+    }
 
-  console.log(`Received message: ${message.action} for tab ${tabId}`);
+    if (!tabId) {
+        console.warn('Could not determine tab ID for message:', message);
+        return { error: 'Could not determine active tab' };
+    }
 
-  switch (message.action) {
-    case 'summarize':
-      return handleSummarize(message, tabId);
+    console.log(`Received message: ${message.action} for tab ${tabId}`);
 
-    case 'question':
-      return handleQuestion(message);
+    switch (message.action) {
+        case 'summarize':
+            return handleSummarize(message, tabId);
 
-    case 'getContent':
-      return handleGetContent({ ...message, tabId: tabId }, sender);
+        case 'question':
+            return handleQuestion(message);
 
-    case 'openOptionsPage':
-      return handleOpenOptionsPage();
+        case 'getContent':
+            return handleGetContent({ ...message, tabId: tabId }, sender);
 
-    case 'openFullPage':
-      return handleOpenFullPage(message);
-    
-    case 'getSummarizationState':
-      return TabStateManager.getState(tabId);
+        case 'openOptionsPage':
+            return handleOpenOptionsPage();
 
-    default:
-      // Don't throw for unknown messages, just return undefined so other listeners can handle it
-      // or check if it's a system message
-      if ((message as any).action === 'summarizationStateUpdated') return;
-      console.warn('Unknown action:', (message as any).action);
-  }
+        case 'openFullPage':
+            return handleOpenFullPage(message);
+
+        case 'getSummarizationState':
+            return TabStateManager.getState(tabId);
+
+        default:
+            // Don't throw for unknown messages, just return undefined so other listeners can handle it
+            // or check if it's a system message
+            if ((message as any).action === 'summarizationStateUpdated') return;
+            console.warn('Unknown action:', (message as any).action);
+    }
 }
 
 /**
  * Handle open options page request
  */
 async function handleOpenOptionsPage(): Promise<void> {
-  return browser.runtime.openOptionsPage();
+    return browser.runtime.openOptionsPage();
 }
 
 /**
  * Handle open full page request
  */
-async function handleOpenFullPage(request: OpenFullPageRequest): Promise<Tabs.Tab> {
-  return browser.tabs.create({ url: request.url });
+async function handleOpenFullPage(
+    request: OpenFullPageRequest
+): Promise<Tabs.Tab> {
+    return browser.tabs.create({ url: request.url });
 }
 
 /**
  * Handle summarize request
  */
-async function handleSummarize(request: SummarizeRequest, tabId: number): Promise<{ summary: string | null, error?: string }> {
-  const { content, url, title, forceRefresh } = request;
+async function handleSummarize(
+    request: SummarizeRequest,
+    tabId: number
+): Promise<{ summary: string | null; error?: string }> {
+    const { content, url, title, forceRefresh } = request;
 
-  const currentState = TabStateManager.getState(tabId);
-  
-  // If already loading, ignore request (debouncing/deduplication)
-  if (currentState.isLoading) {
-      console.log('Summarization already in progress for tab', tabId);
-      return { summary: currentState.summary }; // Return current (possibly null) summary
-  }
+    const currentState = TabStateManager.getState(tabId);
 
-  // Update state to loading
-  TabStateManager.updateState(tabId, { isLoading: true, error: null, pageContent: { content, url, title } });
-
-  try {
-    // Check cache first (skip if forceRefresh is true)
-    let summary: string | null = null;
-    
-    if (!forceRefresh) {
-      const cachedSummary = await CacheManager.get(url, content);
-      if (cachedSummary) {
-        console.log('Returning cached summary');
-        summary = cachedSummary;
-      }
-    } else {
-      console.log('Force refresh: bypassing cache');
+    // If already loading, ignore request (debouncing/deduplication)
+    if (currentState.isLoading) {
+        console.log('Summarization already in progress for tab', tabId);
+        return { summary: currentState.summary }; // Return current (possibly null) summary
     }
 
-    if (!summary) {
-        // Get settings
-        const settings = await StorageManager.getSettings();
+    // Update state to loading
+    TabStateManager.updateState(tabId, {
+        isLoading: true,
+        error: null,
+        pageContent: { content, url, title },
+    });
 
-        // Validate API key
-        const apiKey = settings.apiProvider === 'gemini'
-            ? settings.geminiApiKey
-            : settings.openaiApiKey;
+    try {
+        // Check cache first (skip if forceRefresh is true)
+        let summary: string | null = null;
 
-        if (!apiKey) {
-            throw new Error(`Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`);
-        }
-
-        // Create API client
-        if (settings.apiProvider === 'gemini') {
-            const api = new GeminiAPI(apiKey, settings.geminiModel);
-            const prompt = settings.customPrompts?.summarize;
-            summary = await api.summarize(content, prompt);
+        if (!forceRefresh) {
+            const cachedSummary = await CacheManager.get(url, content);
+            if (cachedSummary) {
+                console.log('Returning cached summary');
+                summary = cachedSummary;
+            }
         } else {
-            const api = new OpenAIAPI(apiKey, settings.openaiModel);
-            const prompt = settings.customPrompts?.summarize;
-            summary = await api.summarize(content, prompt);
+            console.log('Force refresh: bypassing cache');
         }
 
-        // Cache the summary
-        await CacheManager.set(url, content, summary);
+        if (!summary) {
+            // Get settings
+            const settings = await StorageManager.getSettings();
+
+            // Validate API key
+            const apiKey =
+                settings.apiProvider === 'gemini'
+                    ? settings.geminiApiKey
+                    : settings.openaiApiKey;
+
+            if (!apiKey) {
+                throw new Error(
+                    `Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`
+                );
+            }
+
+            // Create API client
+            if (settings.apiProvider === 'gemini') {
+                const api = new GeminiAPI(apiKey, settings.geminiModel);
+                const prompt = settings.customPrompts?.summarize;
+                summary = await api.summarize(content, prompt);
+            } else {
+                const api = new OpenAIAPI(apiKey, settings.openaiModel);
+                const prompt = settings.customPrompts?.summarize;
+                summary = await api.summarize(content, prompt);
+            }
+
+            // Cache the summary
+            await CacheManager.set(url, content, summary);
+        }
+
+        // Update state with success
+        TabStateManager.updateState(tabId, {
+            isLoading: false,
+            summary: summary,
+        });
+        return { summary };
+    } catch (error: any) {
+        console.error('Summarization failed:', error);
+        TabStateManager.updateState(tabId, {
+            isLoading: false,
+            error: error.message || 'Failed to generate summary',
+        });
+        throw error;
     }
-
-    // Update state with success
-    TabStateManager.updateState(tabId, { isLoading: false, summary: summary });
-    return { summary };
-
-  } catch (error: any) {
-    console.error('Summarization failed:', error);
-    TabStateManager.updateState(tabId, { isLoading: false, error: error.message || 'Failed to generate summary' });
-    throw error;
-  }
 }
 
 /**
  * Handle question request
  */
-async function handleQuestion(request: QuestionRequest): Promise<{ answer: string }> {
-  const { question, context, summary } = request;
+async function handleQuestion(
+    request: QuestionRequest
+): Promise<{ answer: string }> {
+    const { question, context, summary } = request;
 
-  // Get settings
-  const settings = await StorageManager.getSettings();
+    // Get settings
+    const settings = await StorageManager.getSettings();
 
-  // Validate API key
-  const apiKey = settings.apiProvider === 'gemini'
-    ? settings.geminiApiKey
-    : settings.openaiApiKey;
+    // Validate API key
+    const apiKey =
+        settings.apiProvider === 'gemini'
+            ? settings.geminiApiKey
+            : settings.openaiApiKey;
 
-  if (!apiKey) {
-    throw new Error(`Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`);
-  }
+    if (!apiKey) {
+        throw new Error(
+            `Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`
+        );
+    }
 
-  // Create API client and get answer
-  let answer: string;
-  if (settings.apiProvider === 'gemini') {
-    const api = new GeminiAPI(apiKey, settings.geminiModel);
-    const prompt = settings.customPrompts?.question;
-    answer = await api.answerQuestion(context, summary, question, prompt);
-  } else {
-    const api = new OpenAIAPI(apiKey, settings.openaiModel);
-    const prompt = settings.customPrompts?.question;
-    answer = await api.answerQuestion(context, summary, question, prompt);
-  }
+    // Create API client and get answer
+    let answer: string;
+    if (settings.apiProvider === 'gemini') {
+        const api = new GeminiAPI(apiKey, settings.geminiModel);
+        const prompt = settings.customPrompts?.question;
+        answer = await api.answerQuestion(context, summary, question, prompt);
+    } else {
+        const api = new OpenAIAPI(apiKey, settings.openaiModel);
+        const prompt = settings.customPrompts?.question;
+        answer = await api.answerQuestion(context, summary, question, prompt);
+    }
 
-  return { answer };
+    return { answer };
 }
 
 /**
  * Handle get content request - extract content from current tab
  */
 async function handleGetContent(
-  request: GetContentRequest,
-  sender: Runtime.MessageSender
-): Promise<{ title: string; url: string; content: string; description: string }> {
-  // Use resolved tabId from request if available, otherwise find active tab
-  let tabId = request.tabId;
-  console.log('GetContent request for tab:', tabId);
+    request: GetContentRequest,
+    sender: Runtime.MessageSender
+): Promise<{
+    title: string;
+    url: string;
+    content: string;
+    description: string;
+}> {
+    // Use resolved tabId from request if available, otherwise find active tab
+    let tabId = request.tabId;
+    console.log('GetContent request for tab:', tabId);
 
-  if (!tabId) {
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-    tabId = tabs[0]?.id;
-  }
+    if (!tabId) {
+        const tabs = await browser.tabs.query({
+            active: true,
+            currentWindow: true,
+        });
+        tabId = tabs[0]?.id;
+    }
 
-  if (!tabId) {
-    throw new Error('No active tab found');
-  }
+    if (!tabId) {
+        throw new Error('No active tab found');
+    }
 
-  console.log('Executing script on tab:', tabId);
+    console.log('Executing script on tab:', tabId);
 
-  // Execute content extraction in the tab
-  const results = await browser.scripting.executeScript({
-    target: { tabId },
-    func: () => {
-      // This function runs in the context of the page
-      const title = document.title;
-      const url = window.location.href;
+    // Execute content extraction in the tab
+    const results = await browser.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+            // This function runs in the context of the page
+            const title = document.title;
+            const url = window.location.href;
 
-      const metaDescription = document.querySelector('meta[name="description"]');
-      const description = metaDescription?.getAttribute('content') || '';
+            const metaDescription = document.querySelector(
+                'meta[name="description"]'
+            );
+            const description = metaDescription?.getAttribute('content') || '';
 
-      let content = '';
-      const mainSelectors = [
-        'main',
-        'article',
-        '[role="main"]',
-        '.main-content',
-        '#main-content',
-        '.content',
-        '#content',
-      ];
+            let content = '';
+            const mainSelectors = [
+                'main',
+                'article',
+                '[role="main"]',
+                '.main-content',
+                '#main-content',
+                '.content',
+                '#content',
+            ];
 
-      let mainElement: Element | null = null;
-      for (const selector of mainSelectors) {
-        mainElement = document.querySelector(selector);
-        if (mainElement) break;
-      }
+            let mainElement: Element | null = null;
+            for (const selector of mainSelectors) {
+                mainElement = document.querySelector(selector);
+                if (mainElement) break;
+            }
 
-      const contentElement = mainElement || document.body;
-      const clone = contentElement.cloneNode(true) as Element;
+            const contentElement = mainElement || document.body;
+            const clone = contentElement.cloneNode(true) as Element;
 
-      const unwantedSelectors = [
-        'script', 'style', 'nav', 'header', 'footer', 'aside',
-        '.navigation', '.menu', '.sidebar', '.advertisement', '.ads',
-        '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]',
-      ];
+            const unwantedSelectors = [
+                'script',
+                'style',
+                'nav',
+                'header',
+                'footer',
+                'aside',
+                '.navigation',
+                '.menu',
+                '.sidebar',
+                '.advertisement',
+                '.ads',
+                '[role="navigation"]',
+                '[role="banner"]',
+                '[role="contentinfo"]',
+            ];
 
-      unwantedSelectors.forEach(selector => {
-        clone.querySelectorAll(selector).forEach(el => el.remove());
-      });
+            unwantedSelectors.forEach((selector) => {
+                clone.querySelectorAll(selector).forEach((el) => el.remove());
+            });
 
-      content = clone.textContent || '';
-      content = content.replace(/\s+/g, ' ').replace(/\n\s*\n/g, '\n\n').trim();
+            content = clone.textContent || '';
+            content = content
+                .replace(/\s+/g, ' ')
+                .replace(/\n\s*\n/g, '\n\n')
+                .trim();
 
-      return { title, url, content, description };
-    },
-  });
+            return { title, url, content, description };
+        },
+    });
 
-  if (!results || results.length === 0 || !results[0].result) {
-    throw new Error('Failed to extract content from page');
-  }
+    if (!results || results.length === 0 || !results[0].result) {
+        throw new Error('Failed to extract content from page');
+    }
 
-  return results[0].result;
+    return results[0].result;
 }

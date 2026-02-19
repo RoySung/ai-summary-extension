@@ -186,7 +186,7 @@
 }
 
 .markdown-content p {
-    margin: 0.8em 0;
+    margin: 12px 0;
 }
 
 .markdown-content ul,
@@ -311,20 +311,15 @@
 }
 
 .message-content {
-    max-width: 80%;
-    padding: 12px 16px;
     border-radius: 12px;
     line-height: 1.5;
 }
 
 .message.user .message-content {
-    background: linear-gradient(135deg, #ff8008 0%, #ffc837 100%);
     color: white;
 }
 
 .message.assistant .message-content {
-    background: var(--secondary-bg);
-    border: 1px solid var(--secondary-border);
     color: var(--text-primary);
 }
 

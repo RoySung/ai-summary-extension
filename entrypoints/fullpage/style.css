@@ -192,7 +192,7 @@ body {
 }
 
 .message {
-    padding: 1.5rem;
+    padding: 8px 16px;
     border-radius: 12px;
     animation: fadeIn 0.3s ease;
     max-width: 85%;
@@ -370,7 +370,6 @@ body {
 }
 
 .markdown-content p {
-    margin-bottom: 1rem;
     line-height: 1.8;
 }
 

@@ -18,7 +18,7 @@ function simpleHash(str: string): string {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
+        hash = (hash << 5) - hash + char;
         hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(36);
@@ -29,18 +29,19 @@ function simpleHash(str: string): string {
  */
 export class CacheManager {
     /**
-     * Generate cache key from URL and content
+     * Generate cache key from URL and promptId
      */
-    static generateKey(url: string, content: string): string {
-        const contentHash = simpleHash(content.slice(0, 5000)); // Hash first 5000 chars
-        return `${CACHE_KEY_PREFIX}${simpleHash(url)}_${contentHash}`;
+    static generateKey(url: string, promptId?: string): string {
+        const urlHash = simpleHash(url);
+        const key = `${CACHE_KEY_PREFIX}${urlHash}_${promptId || 'default'}`;
+        return key;
     }
 
     /**
      * Get cached summary
      */
-    static async get(url: string, content: string): Promise<string | null> {
-        const key = this.generateKey(url, content);
+    static async get(url: string, promptId?: string): Promise<string | null> {
+        const key = this.generateKey(url, promptId);
         const result = await browser.storage.local.get(key);
 
         if (!result[key]) {
@@ -56,26 +57,47 @@ export class CacheManager {
             return null;
         }
 
-        console.log('Cache hit for URL:', url);
+        console.log('Cache hit for URL:', url, 'promptId:', promptId);
         return entry.summary;
     }
 
     /**
      * Set cached summary
      */
-    static async set(url: string, content: string, summary: string): Promise<void> {
-        const key = this.generateKey(url, content);
-        const contentHash = simpleHash(content.slice(0, 5000));
+    static async set(
+        url: string,
+        summary: string,
+        promptId?: string,
+    ): Promise<void> {
+        const key = this.generateKey(url, promptId);
 
         const entry: CacheEntry = {
             summary,
             timestamp: Date.now(),
             url,
-            contentHash,
+            contentHash: '', // Kept for backwards compatibility with existing cache entries
         };
 
         await browser.storage.local.set({ [key]: entry });
-        console.log('Cached summary for URL:', url);
+        console.log('Cached summary for URL:', url, 'promptId:', promptId);
+    }
+
+    /**
+     * Clear cache entries for a specific prompt ID
+     */
+    static async clearPromptCache(promptId: string): Promise<void> {
+        const result = await browser.storage.local.get(null);
+        const suffix = `_${promptId}`;
+        const keysToRemove = Object.keys(result).filter(
+            (key) => key.startsWith(CACHE_KEY_PREFIX) && key.endsWith(suffix),
+        );
+
+        if (keysToRemove.length > 0) {
+            await browser.storage.local.remove(keysToRemove);
+            console.log(
+                `Cleared ${keysToRemove.length} cache entries for prompt: ${promptId}`,
+            );
+        }
     }
 
     /**
@@ -83,8 +105,8 @@ export class CacheManager {
      */
     static async clear(): Promise<void> {
         const result = await browser.storage.local.get(null);
-        const keysToRemove = Object.keys(result).filter(key =>
-            key.startsWith(CACHE_KEY_PREFIX)
+        const keysToRemove = Object.keys(result).filter((key) =>
+            key.startsWith(CACHE_KEY_PREFIX),
         );
 
         if (keysToRemove.length > 0) {

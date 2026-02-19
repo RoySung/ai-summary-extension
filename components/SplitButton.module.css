@@ -1,0 +1,100 @@
+.container {
+    position: relative;
+    width: 100%;
+    margin: 0;
+}
+
+.buttonGroup {
+    display: flex;
+    width: 100%;
+    gap: 0;
+}
+
+.mainButton {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 10px 16px;
+    min-height: 44px;
+}
+
+.promptName {
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+.triggerButton {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    width: 32px;
+    min-width: 32px;
+    max-width: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex: none;
+}
+
+.triggerButton.primary {
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.triggerButton.secondary {
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background-color: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 200px;
+}
+
+.menu.top {
+    bottom: 100%;
+    margin-bottom: 4px;
+}
+
+.menu.bottom {
+    top: 100%;
+    margin-top: 4px;
+}
+
+.menuItem {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 14px;
+    white-space: normal;
+    word-break: break-word;
+    outline: none;
+    transition: background-color 0.15s ease;
+}
+
+.menuItem:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.menuItem:hover {
+    background-color: rgba(59, 130, 246, 0.5);
+}

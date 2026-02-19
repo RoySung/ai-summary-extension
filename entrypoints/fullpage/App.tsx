@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { StorageManager } from '../../utils/storage';
-import { type Theme } from '../../utils/constants';
+import {
+    type Theme,
+    type Settings,
+    DEFAULT_SETTINGS,
+} from '../../utils/constants';
+import SplitButton from '../../components/SplitButton';
 import icon from '../../assets/icon.png';
 import '../../assets/theme.css';
+import '../../assets/common.css';
 import './style.css';
 
 interface Message {
@@ -32,6 +38,7 @@ export default function FullPage() {
     const [pageUrl, setPageUrl] = useState('');
     const [theme, setTheme] = useState<Theme>('warm');
     const [isSelection, setIsSelection] = useState(false);
+    const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
     useEffect(() => {
         if (pageTitle) {
@@ -70,7 +77,7 @@ export default function FullPage() {
                         performSummarize(
                             data.pageContent.content,
                             data.pageUrl,
-                            data.pageTitle
+                            data.pageTitle,
                         );
                     }
                 } else {
@@ -88,7 +95,9 @@ export default function FullPage() {
         content: string,
         url: string,
         title: string,
-        forceRefresh: boolean = false
+        forceRefresh: boolean = false,
+        promptText?: string,
+        promptId?: string,
     ) => {
         setLoading(true);
         setError(null);
@@ -100,6 +109,8 @@ export default function FullPage() {
                 url: url,
                 title: title,
                 forceRefresh: forceRefresh,
+                promptText,
+                promptId,
             });
 
             if (response.error) {
@@ -134,8 +145,9 @@ export default function FullPage() {
     };
 
     const loadSettings = async () => {
-        const settings = await StorageManager.getSettings();
-        setTheme(settings.theme);
+        const loadedSettings = await StorageManager.getSettings();
+        setSettings(loadedSettings);
+        setTheme(loadedSettings.theme);
     };
 
     const handleAskQuestion = async () => {
@@ -179,12 +191,19 @@ export default function FullPage() {
         }
     };
 
-    const handleSummarize = async () => {
+    const handleSummarize = async (promptText?: string, promptId?: string) => {
         if (!pageContent) {
             setError('No page content available');
             return;
         }
-        await performSummarize(pageContent.content, pageUrl, pageTitle, true);
+        await performSummarize(
+            pageContent.content,
+            pageUrl,
+            pageTitle,
+            true,
+            promptText,
+            promptId,
+        );
     };
 
     return (
@@ -270,15 +289,19 @@ export default function FullPage() {
                         <div className="summary-full">
                             <div className="section-header">
                                 <h3>Summary</h3>
-                                <button
-                                    onClick={handleSummarize}
-                                    disabled={loading}
-                                    className="secondary-btn"
-                                >
-                                    {loading
-                                        ? 'Re-summarizing...'
-                                        : '🔄 Re-summarize'}
-                                </button>
+                                <SplitButton
+                                    className="resummarize-btn"
+                                    variant="secondary"
+                                    icon="🔄"
+                                    text="Re-summarize"
+                                    loading={loading}
+                                    loadingText="Re-summarizing..."
+                                    settings={settings}
+                                    onAction={(promptText, promptId) =>
+                                        handleSummarize(promptText, promptId)
+                                    }
+                                    menuPosition="bottom"
+                                />
                             </div>
                             <div className="summary-content-wrapper">
                                 <div className="summary-content markdown-content">

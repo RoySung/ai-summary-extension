@@ -2,7 +2,7 @@ import { GeminiAPI } from '../api/gemini';
 import { OpenAIAPI } from '../api/openai';
 import { StorageManager } from '../utils/storage';
 import { CacheManager } from '../utils/cache';
-import { CONTEXT_MENU_IDS } from '../utils/constants';
+import { CONTEXT_MENU_IDS, type Settings } from '../utils/constants';
 import type { Runtime, Tabs } from 'webextension-polyfill';
 
 export default defineBackground(() => {
@@ -91,6 +91,43 @@ export default defineBackground(() => {
         }
     });
 
+    // Reset tab state on navigation
+    browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+        // Reset state when the page starts loading
+        if (changeInfo.status === 'loading') {
+            const currentState = TabStateManager.getState(tabId);
+            // Only reset if we actually have state to clear
+            if (
+                currentState.summary ||
+                currentState.pageContent ||
+                currentState.error
+            ) {
+                console.log(
+                    `Resetting state for tab ${tabId} due to navigation`
+                );
+                TabStateManager.updateState(tabId, {
+                    isLoading: false,
+                    summary: null,
+                    error: null,
+                    pageContent: null,
+                });
+            }
+        }
+
+        // Notify content script of URL change for SPA navigation
+        if (changeInfo.url) {
+            console.log(`URL changed in tab ${tabId}:`, changeInfo.url);
+            browser.tabs
+                .sendMessage(tabId, {
+                    action: 'urlChanged',
+                    url: changeInfo.url,
+                })
+                .catch(() => {
+                    // Content script might not be loaded yet, ignore error
+                });
+        }
+    });
+
     // Message handler
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         handleMessage(message, sender)
@@ -166,6 +203,8 @@ interface SummarizeRequest {
     url: string;
     title: string;
     forceRefresh?: boolean;
+    promptText?: string;
+    promptId?: string;
 }
 
 interface QuestionRequest {
@@ -255,6 +294,49 @@ async function handleMessage(
 }
 
 /**
+ * Resolve prompt configuration from saved prompts
+ * @param promptText - Explicitly provided prompt text
+ * @param promptId - ID of the prompt to use
+ * @param settings - User settings containing saved prompts
+ * @returns Resolved prompt text and ID
+ */
+function getPromptConfigFromSaved(
+    promptText: string | undefined,
+    promptId: string | undefined,
+    settings: Settings
+): { resolvedPromptText: string; resolvedPromptId: string } {
+    let resolvedPromptText = promptText || '';
+    let resolvedPromptId = promptId || '';
+
+    if (!resolvedPromptText) {
+        // If ID is provided, look it up
+        if (resolvedPromptId) {
+            const savedPrompt = settings.savedPrompts?.find(
+                (p) => p.id === resolvedPromptId
+            );
+            if (savedPrompt) {
+                resolvedPromptText = savedPrompt.content;
+            }
+        }
+
+        // If still no text (or no ID provided), try default
+        if (!resolvedPromptText) {
+            if (settings.savedPrompts && settings.defaultPromptId) {
+                const defaultPrompt = settings.savedPrompts.find(
+                    (p) => p.id === settings.defaultPromptId
+                );
+                if (defaultPrompt) {
+                    resolvedPromptText = defaultPrompt.content;
+                    resolvedPromptId = defaultPrompt.id;
+                }
+            }
+        }
+    }
+
+    return { resolvedPromptText, resolvedPromptId };
+}
+
+/**
  * Handle open options page request
  */
 async function handleOpenOptionsPage(): Promise<void> {
@@ -277,7 +359,7 @@ async function handleSummarize(
     request: SummarizeRequest,
     tabId: number
 ): Promise<{ summary: string | null; error?: string }> {
-    const { content, url, title, forceRefresh } = request;
+    const { content, url, title, forceRefresh, promptText, promptId } = request;
 
     const currentState = TabStateManager.getState(tabId);
 
@@ -295,11 +377,18 @@ async function handleSummarize(
     });
 
     try {
+        // Get settings
+        const settings = await StorageManager.getSettings();
+
+        // Resolve prompt configuration
+        const { resolvedPromptText, resolvedPromptId } =
+            getPromptConfigFromSaved(promptText, promptId, settings);
+
         // Check cache first (skip if forceRefresh is true)
         let summary: string | null = null;
 
         if (!forceRefresh) {
-            const cachedSummary = await CacheManager.get(url, content);
+            const cachedSummary = await CacheManager.get(url, resolvedPromptId);
             if (cachedSummary) {
                 console.log('Returning cached summary');
                 summary = cachedSummary;
@@ -309,9 +398,6 @@ async function handleSummarize(
         }
 
         if (!summary) {
-            // Get settings
-            const settings = await StorageManager.getSettings();
-
             // Validate API key
             const apiKey =
                 settings.apiProvider === 'gemini'
@@ -327,16 +413,16 @@ async function handleSummarize(
             // Create API client
             if (settings.apiProvider === 'gemini') {
                 const api = new GeminiAPI(apiKey, settings.geminiModel);
-                const prompt = settings.customPrompts?.summarize;
-                summary = await api.summarize(content, prompt);
+                summary = await api.summarize(content, resolvedPromptText);
             } else {
                 const api = new OpenAIAPI(apiKey, settings.openaiModel);
-                const prompt = settings.customPrompts?.summarize;
-                summary = await api.summarize(content, prompt);
+                summary = await api.summarize(content, resolvedPromptText);
             }
 
             // Cache the summary
-            await CacheManager.set(url, content, summary);
+            if (summary) {
+                await CacheManager.set(url, summary, resolvedPromptId);
+            }
         }
 
         // Update state with success

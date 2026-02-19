@@ -67,11 +67,59 @@ export const STORAGE_KEYS = {
     OPENAI_API_KEY: 'openaiApiKey',
     GEMINI_MODEL: 'geminiModel',
     OPENAI_MODEL: 'openaiModel',
-    CUSTOM_PROMPTS: 'customPrompts',
+    CUSTOM_PROMPTS: 'customPrompts', // Legacy: holds { summarize: string, question: string }
+    SAVED_PROMPTS: 'savedPrompts', // New: List of CustomPrompt
+    DEFAULT_PROMPT_ID: 'defaultPromptId', // New: ID of the default prompt
     CACHE_DATA: 'cacheData',
     THEME: 'theme',
     SHOW_FLOATING_BALL: 'showFloatingBall',
 };
+
+export interface CustomPrompt {
+    id: string;
+    name: string;
+    content: string;
+}
+
+export const PRESET_PROMPTS: CustomPrompt[] = [
+    {
+        id: 'default',
+        name: 'Standard Summary',
+        content: DEFAULT_PROMPTS.SUMMARIZE,
+    },
+    {
+        id: 'bullet-points',
+        name: 'Bullet Points',
+        content: `Summarize the following content using a bulleted list. Capture the main ideas and key details.
+
+Content:
+{content}`,
+    },
+    {
+        id: 'deep-dive',
+        name: 'Deep Dive',
+        content: `Provide a detailed and comprehensive analysis of the following content. Include all significant details and nuances.
+
+Content:
+{content}`,
+    },
+    {
+        id: 'eli5',
+        name: 'ELI5 (Simple)',
+        content: `Explain the following content effectively to a 5-year-old. Use simple language and analogies.
+
+Content:
+{content}`,
+    },
+    {
+        id: 'action-items',
+        name: 'Action Items',
+        content: `Identify and list any action items, recommendations, or key takeaways from the following content.
+
+Content:
+{content}`,
+    },
+];
 
 // Default Settings
 export const DEFAULT_SETTINGS = {
@@ -84,6 +132,8 @@ export const DEFAULT_SETTINGS = {
         summarize: DEFAULT_PROMPTS.SUMMARIZE,
         question: DEFAULT_PROMPTS.QUESTION,
     },
+    savedPrompts: PRESET_PROMPTS,
+    defaultPromptId: 'default',
     theme: 'warm' as Theme,
     showFloatingBall: true,
 };

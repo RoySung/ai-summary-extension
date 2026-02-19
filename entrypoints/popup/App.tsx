@@ -1,13 +1,19 @@
-import { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import { StorageManager } from "../../utils/storage";
-import { type Theme } from "../../utils/constants";
-import icon from "../../assets/icon.png";
-import "../../assets/theme.css";
-import "./App.css";
+import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { StorageManager } from '../../utils/storage';
+import {
+    type Theme,
+    type Settings,
+    DEFAULT_SETTINGS,
+} from '../../utils/constants';
+import SplitButton from '../../components/SplitButton';
+import icon from '../../assets/icon.png';
+import '../../assets/theme.css';
+import '../../assets/common.css';
+import './App.css';
 
 interface Message {
-    role: "user" | "assistant";
+    role: 'user' | 'assistant';
     content: string;
 }
 
@@ -17,10 +23,11 @@ function App() {
     const [error, setError] = useState<string | null>(null);
     const [summary, setSummary] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
-    const [question, setQuestion] = useState("");
+    const [question, setQuestion] = useState('');
     const [pageContent, setPageContent] = useState<any>(null);
-    const [theme, setTheme] = useState<Theme>("warm");
+    const [theme, setTheme] = useState<Theme>('warm');
     const [showFloatingBall, setShowFloatingBall] = useState(true);
+    const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
     // Get current page content and settings on mount
     useEffect(() => {
@@ -30,7 +37,7 @@ function App() {
         // Listen for state updates from background
         const messageListener = (message: any) => {
             if (
-                message.action === "summarizationStateUpdated" &&
+                message.action === 'summarizationStateUpdated' &&
                 message.state
             ) {
                 const {
@@ -44,40 +51,65 @@ function App() {
                 if (newError !== undefined) setError(newError);
                 if (newPageContent && !pageContent)
                     setPageContent(newPageContent);
+            } else if (message.action === 'urlChanged') {
+                // URL changed notification from background
+                console.log('URL changed notification in popup:', message.url);
+                initializeState();
+            }
+        };
+
+        // Listen for popup visibility changes
+        const visibilityChangeListener = () => {
+            if (!document.hidden) {
+                initializeState();
             }
         };
 
         browser.runtime.onMessage.addListener(messageListener);
-        return () => browser.runtime.onMessage.removeListener(messageListener);
+        window.addEventListener('visibilitychange', visibilityChangeListener);
+
+        return () => {
+            browser.runtime.onMessage.removeListener(messageListener);
+            window.removeEventListener(
+                'visibilitychange',
+                visibilityChangeListener,
+            );
+        };
     }, []);
 
     const loadSettings = async () => {
-        const settings = await StorageManager.getSettings();
-        setTheme(settings.theme);
-        setShowFloatingBall(settings.showFloatingBall);
+        const loadedSettings = await StorageManager.getSettings();
+        setSettings(loadedSettings);
+        setTheme(loadedSettings.theme);
+        setShowFloatingBall(loadedSettings.showFloatingBall);
     };
 
     const initializeState = async () => {
         try {
             // Get synchronization state first
             const state = await browser.runtime.sendMessage({
-                action: "getSummarizationState",
+                action: 'getSummarizationState',
             });
-            if (state) {
-                setLoading(state.isLoading);
-                setSummary(state.summary);
-                setError(state.error);
-                if (state.pageContent) {
-                    setPageContent(state.pageContent);
-                } else {
-                    // If no content in background state, load it locally
-                    loadPageContent();
-                }
+
+            // Always reset states (important for route changes)
+            setLoading(state?.isLoading || false);
+            setSummary(state?.summary || null);
+            setError(state?.error || null);
+
+            if (state?.pageContent) {
+                setPageContent(state.pageContent);
             } else {
+                // If no content in background state, load it locally
+                setPageContent(null); // Clear old content first
                 loadPageContent();
             }
         } catch (err) {
-            console.error("Failed to initialize state:", err);
+            console.error('Failed to initialize state:', err);
+            // Reset all states on error
+            setLoading(false);
+            setSummary(null);
+            setError(null);
+            setPageContent(null);
             loadPageContent();
         }
     };
@@ -91,7 +123,7 @@ function App() {
     const loadPageContent = async () => {
         try {
             const response = await browser.runtime.sendMessage({
-                action: "getContent",
+                action: 'getContent',
             });
             if (response && response.error) {
                 setError(response.error);
@@ -99,17 +131,21 @@ function App() {
                 setPageContent(response);
             } else {
                 // Fallback or just log if no response (maybe background script didn't reply)
-                console.warn("No response from background for getContent");
+                console.warn('No response from background for getContent');
             }
         } catch (err: any) {
-            console.error("Failed to load page content:", err);
-            setError(err.message || "Failed to load page content");
+            console.error('Failed to load page content:', err);
+            setError(err.message || 'Failed to load page content');
         }
     };
 
-    const handleSummarize = async (forceRefresh: boolean = false) => {
+    const handleSummarize = async (
+        forceRefresh: boolean = false,
+        promptText?: string,
+        promptId?: string,
+    ) => {
         if (!pageContent) {
-            setError("No page content available");
+            setError('No page content available');
             return;
         }
 
@@ -120,11 +156,13 @@ function App() {
         try {
             // Just send the message, state updates come via listener
             const response = await browser.runtime.sendMessage({
-                action: "summarize",
+                action: 'summarize',
                 content: pageContent.content,
                 url: pageContent.url,
                 title: pageContent.title,
                 forceRefresh,
+                promptText,
+                promptId,
             });
 
             if (response && response.error) {
@@ -139,8 +177,8 @@ function App() {
                 setMessages([]); // Clear chat on new summary
             }
         } catch (err: any) {
-            console.error("Summarization error:", err);
-            setError(err.message || "Failed to generate summary");
+            console.error('Summarization error:', err);
+            setError(err.message || 'Failed to generate summary');
             setLoading(false);
         }
     };
@@ -148,9 +186,9 @@ function App() {
     const handleAskQuestion = async () => {
         if (!question.trim() || !summary || !pageContent) return;
 
-        const userMessage: Message = { role: "user", content: question };
+        const userMessage: Message = { role: 'user', content: question };
         setMessages((prev) => [...prev, userMessage]);
-        setQuestion("");
+        setQuestion('');
         setLoading(true); // Re-using loading state, or should it be separate?
         // Ideally chat loading is separate, but for now re-using is fine as long as we don't confuse it with summary loading.
         // Actually, the original code used the same `loading` state.
@@ -158,7 +196,7 @@ function App() {
 
         try {
             const response = await browser.runtime.sendMessage({
-                action: "question",
+                action: 'question',
                 question: question,
                 context: pageContent.content.slice(0, 5000), // Limit context size
                 summary: summary,
@@ -168,21 +206,21 @@ function App() {
                 setError(response.error);
             } else {
                 const assistantMessage: Message = {
-                    role: "assistant",
+                    role: 'assistant',
                     content: response.answer,
                 };
                 setMessages((prev) => [...prev, assistantMessage]);
             }
         } catch (err: any) {
-            console.error("Question error:", err);
-            setError(err.message || "Failed to get answer");
+            console.error('Question error:', err);
+            setError(err.message || 'Failed to get answer');
         } finally {
             setLoading(false);
         }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleAskQuestion();
         }
@@ -221,27 +259,27 @@ function App() {
                     <img src={icon} alt="AI Summary" className="logo-icon" />
                     <div
                         style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            paddingLeft: "4px",
+                            display: 'flex',
+                            flexDirection: 'column',
+                            paddingLeft: '4px',
                         }}
                     >
-                        <h1 style={{ margin: 0, lineHeight: "1.2" }}>
+                        <h1 style={{ margin: 0, lineHeight: '1.2' }}>
                             AI Summary
                         </h1>
-                        <small style={{ fontSize: "10px", opacity: 0.6 }}>
+                        <small style={{ fontSize: '10px', opacity: 0.6 }}>
                             v{version}
                         </small>
                     </div>
                 </div>
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                         className="settings-btn"
                         onClick={toggleFloatingBall}
                         title={
                             showFloatingBall
-                                ? "Hide Floating Ball"
-                                : "Show Floating Ball"
+                                ? 'Hide Floating Ball'
+                                : 'Show Floating Ball'
                         }
                         style={{ opacity: showFloatingBall ? 1 : 0.5 }}
                     >
@@ -271,15 +309,19 @@ function App() {
                 )}
 
                 {!summary && (
-                    <div className="actions">
-                        <button
-                            onClick={() => handleSummarize(false)}
-                            disabled={loading || !pageContent}
-                            className="primary-btn"
-                        >
-                            {loading ? "Summarizing..." : "✨ Summarize Page"}
-                        </button>
-                    </div>
+                    <SplitButton
+                        variant="primary"
+                        icon="✨"
+                        text="Summarize"
+                        disabled={!pageContent}
+                        loading={loading}
+                        loadingText="Summarizing..."
+                        settings={settings}
+                        onAction={(promptText, promptId) =>
+                            handleSummarize(false, promptText, promptId)
+                        }
+                        menuPosition="bottom"
+                    />
                 )}
 
                 {summary && (
@@ -292,20 +334,33 @@ function App() {
                                 </div>
                                 {loading && <div className="loading-overlay" />}
                             </div>
-                            <div className="summary-actions">
-                                <button
-                                    onClick={() => handleSummarize(true)}
-                                    disabled={loading}
-                                    className="secondary-btn"
-                                >
-                                    {loading
-                                        ? "Re-summarizing..."
-                                        : "🔄 Re-summarize"}
-                                </button>
+                            <div
+                                className="summary-actions"
+                                style={{ flexDirection: 'column', gap: '16px' }}
+                            >
+                                {/* Re-summarize Split Button */}
+                                <SplitButton
+                                    variant="secondary"
+                                    icon="🔄"
+                                    text="Re-summarize"
+                                    loading={loading}
+                                    loadingText="Re-summarizing..."
+                                    settings={settings}
+                                    onAction={(promptText, promptId) =>
+                                        handleSummarize(
+                                            true,
+                                            promptText,
+                                            promptId,
+                                        )
+                                    }
+                                    menuPosition="top"
+                                />
+
                                 <button
                                     onClick={openInFullPage}
                                     disabled={loading}
                                     className="primary-btn"
+                                    style={{ width: '100%' }}
                                 >
                                     📄 Open in Full Page
                                 </button>
@@ -348,7 +403,7 @@ function App() {
                                     disabled={loading || !question.trim()}
                                     className="send-btn"
                                 >
-                                    {loading ? "..." : "➤"}
+                                    {loading ? '...' : '➤'}
                                 </button>
                             </div>
                         </div>

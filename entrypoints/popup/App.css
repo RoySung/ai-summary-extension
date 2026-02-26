@@ -39,12 +39,6 @@ header h1 {
     gap: 10px;
 }
 
-.logo-icon {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-}
-
 .settings-btn {
     background: transparent;
     border: none;

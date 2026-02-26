@@ -343,7 +343,7 @@ export default function App() {
 
     if (!isExpanded) {
         return (
-            <div className="ai-summary-floating-container">
+            <div data-theme={theme} className="ai-summary-floating-container">
                 <button
                     className="ai-summary-floating-ball"
                     onClick={toggleExpand}
@@ -389,7 +389,6 @@ export default function App() {
                             src={icon}
                             alt="AI Summary"
                             className="logo-icon"
-                            style={{ width: '24px', height: '24px' }}
                         />
                         <div
                             style={{ display: 'flex', flexDirection: 'column' }}

@@ -57,12 +57,6 @@ body {
     gap: 12px;
 }
 
-.logo-icon {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-}
-
 .page-link {
     padding: 0.5rem 1rem;
     background: var(--primary-gradient);

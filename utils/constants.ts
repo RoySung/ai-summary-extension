@@ -7,6 +7,7 @@ export const CONTEXT_MENU_IDS = {
 } as const;
 
 // Model Configurations
+// Gemini models refs: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models
 export const MODELS = {
     GEMINI: {
         'gemini-2.5-flash': {

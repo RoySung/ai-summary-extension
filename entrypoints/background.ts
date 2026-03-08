@@ -6,7 +6,7 @@ import { CONTEXT_MENU_IDS, type Settings } from '../utils/constants';
 import type { Runtime, Tabs } from 'webextension-polyfill';
 
 export default defineBackground(() => {
-    console.log('AI Summary background worker initialized');
+    console.log('AskWeb AI background worker initialized');
 
     // Clean expired cache entries on startup
     CacheManager.cleanExpired();

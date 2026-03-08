@@ -347,11 +347,11 @@ export default function App() {
                 <button
                     className="ai-summary-floating-ball"
                     onClick={toggleExpand}
-                    title="Open AI Summary"
+                    title="Open AskWeb AI"
                 >
                     <img
                         src={icon}
-                        alt="AI Summary"
+                        alt="AskWeb AI"
                         style={{ width: '42px', height: '42px' }}
                     />
                 </button>
@@ -387,7 +387,7 @@ export default function App() {
                     >
                         <img
                             src={icon}
-                            alt="AI Summary"
+                            alt="AskWeb AI"
                             className="logo-icon"
                         />
                         <div
@@ -397,7 +397,7 @@ export default function App() {
                                 className="ai-summary-title"
                                 style={{ margin: 0, lineHeight: '1.2' }}
                             >
-                                AI Summary
+                                AskWeb AI
                             </h2>
                             <small style={{ fontSize: '10px', opacity: 0.6 }}>
                                 v{version}

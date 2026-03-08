@@ -1,23 +1,20 @@
-# AI Summary Chrome Extension
+# AskWeb AI
 
-A powerful and elegant Chrome extension that leverages AI (Google Gemini or OpenAI) to summarize web pages and enable interactive Q&A about their content.
+AskWeb AI is a powerful and elegant Chrome extension that helps you summarize and chat with any page using AI (Google Gemini or OpenAI).
 
 ## ✨ Key Features
 
+- **🆓 100% Free & Bring Your Own Key **: No subscription fees or hidden charges. Use your own API key from Google Gemini or OpenAI and only pay the provider directly (or enjoy their free tiers).
 - **🚀 Instant Page Summarization**: Get concise, accurate summaries of any web page with a single click.
 - **💬 Interactive Q&A Chat**: Have a conversation with the AI about the page content. Ask specific questions and get answers based on the context.
 - **🎯 Floating Mode**: A non-intrusive floating ball allows quick access to the summarizer. It expands into a fully **resizable window**, letting you browse and read summaries side-by-side.
 - **📄 Full Page View**: Switch to a dedicated immersive view for reading long summaries or managing complex Q&A sessions.
-- **🎨 Theme Selection**: Customize the look and feel with built-in themes:
-  - **Warm**: A cozy orange-based theme.
-  - **Cool**: A sleek blue/purple-based theme.
+- **🎨 Theme Selection**: Customize the look and feel with built-in themes
 
 ## 🤖 Supported AI Providers
 
 - **Google Gemini** (Recommended for free tier users)
-  - Models: gemini-2.5-flash, gemini-3-flash-preview, gemini-3-pro-preview
 - **OpenAI**
-  - Models: GPT-4o, GPT-4o Mini, GPT-4 Turbo
 
 ## 🛠️ Installation
 
@@ -60,14 +57,19 @@ A powerful and elegant Chrome extension that leverages AI (Google Gemini or Open
 
 ## 📖 Usage Guide
 
-### Using the Floating Window
-1.  A floating ball appears on web pages (enabled by default).
-2.  Click to expand it into a window.
-3.  **Resize**: Drag the edges of the window to resize it to your liking.
-4.  **Summarize**: Click "✨ Summarize Page" to start.
-5.  **Chat**: Type in the input box to ask follow-up questions.
+### Using the Floating Window (Summarize Entire Page)
+
+1.  Open the window by clicking the **extension icon** or the **floating ball** on the web page.
+2.  **Resize**: Drag the edges of the window to resize it to your liking.
+3.  **Summarize**: Click "✨ Summarize Page" to summarize the entire page's content.
+4.  **Chat**: Type in the input box to ask follow-up questions.
+
+### Summarize Selected Text
+
+Highlight any specific text on a web page to generate a targeted summary for just that selected content.
 
 ### Full Page View
+
 For a deeper dive, click the **"📄 Full Page"** button within the summary view. This opens a dedicated tab with your current summary and chat history, giving you more space to think and read.
 
 ## 💻 Tech Stack

@@ -111,14 +111,14 @@ function Options() {
             <header className="options-header">
                 <div className="header-content">
                     <div className="header-title-group">
-                        <h1>AI Summary - Settings</h1>
+                        <h1>AskWeb AI - Settings</h1>
                         <small className="version-text">v{version}</small>
                     </div>
                 </div>
             </header>
 
             <div className="logo-container">
-                <img src={icon} className="logo" alt="AI Summary Logo" />
+                <img src={icon} className="logo" alt="AskWeb AI Logo" />
             </div>
 
             <div className="options-content">

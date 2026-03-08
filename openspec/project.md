@@ -2,7 +2,7 @@
 
 ## Purpose
 
-**AI Summary Extension** is a browser extension built to enhance productivity by summarising web pages and enabling interactive Q&A based on page content. It leverages Large Language Models (LLMs) like Google Gemini and OpenAI to process content directly within the browser.
+**AskWeb AI** is a browser extension built to enhance productivity by summarising web pages and enabling interactive Q&A based on page content. It leverages Large Language Models (LLMs) like Google Gemini and OpenAI to process content directly within the browser.
 
 ## Tech Stack
 

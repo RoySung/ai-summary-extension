@@ -256,7 +256,7 @@ function App() {
         <div className="app" data-theme={theme}>
             <header>
                 <div className="logo-container">
-                    <img src={icon} alt="AI Summary" className="logo-icon" />
+                    <img src={icon} alt="AskWeb AI" className="logo-icon" />
                     <div
                         style={{
                             display: 'flex',
@@ -264,9 +264,7 @@ function App() {
                             paddingLeft: '4px',
                         }}
                     >
-                        <h1 style={{ margin: 0, lineHeight: '1.2' }}>
-                            AI Summary
-                        </h1>
+                        <h1 style={{ margin: 0, lineHeight: '1.2' }}>AskWeb AI</h1>
                         <small style={{ fontSize: '10px', opacity: 0.6 }}>
                             v{version}
                         </small>

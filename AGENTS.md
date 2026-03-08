@@ -2,7 +2,7 @@
 # AGENTS.md
 
 ## Project Overview
-**AI Summary Extension** is a browser extension built with the [WXT Framework](https://wxt.dev/) and React. It uses Google Gemini and OpenAI to summarize web pages and answer questions based on the page content.
+**AskWeb AI** is a browser extension built with the [WXT Framework](https://wxt.dev/) and React. It uses Google Gemini and OpenAI to summarize web pages and answer questions based on the page content.
 
 ## Architecture
 

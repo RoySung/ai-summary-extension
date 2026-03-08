@@ -5,7 +5,8 @@ export default defineConfig({
     modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
     manifest: {
         permissions: ['storage', 'activeTab', 'scripting', 'contextMenus'],
-        name: 'AI Summary',
-        description: 'Summarize web pages using AI (Gemini or OpenAI)',
+        name: 'AskWeb AI: Summarize & Chat with Any Page',
+        description:
+            'Summarize and chat with any web page using your own Gemini or OpenAI API key.',
     },
 });

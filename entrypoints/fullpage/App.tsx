@@ -42,7 +42,7 @@ export default function FullPage() {
 
     useEffect(() => {
         if (pageTitle) {
-            document.title = `AI Summary: ${pageTitle}`;
+            document.title = `AskWeb AI: ${pageTitle}`;
         }
     }, [pageTitle]);
 
@@ -213,7 +213,7 @@ export default function FullPage() {
                     <div className="logo-container">
                         <img
                             src={icon}
-                            alt="AI Summary"
+                            alt="AskWeb AI"
                             className="logo-icon"
                         />
                         <div
@@ -223,9 +223,7 @@ export default function FullPage() {
                                 justifyContent: 'center',
                             }}
                         >
-                            <h1 style={{ margin: 0, lineHeight: '1.2' }}>
-                                AI Summary
-                            </h1>
+                            <h1 style={{ margin: 0, lineHeight: '1.2' }}>AskWeb AI</h1>
                             <small style={{ fontSize: '12px', opacity: 0.6 }}>
                                 v{version}
                             </small>

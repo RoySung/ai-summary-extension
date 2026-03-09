@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { extractPageContent } from '../../utils/page';
 import { StorageManager } from '../../utils/storage';
@@ -20,6 +20,7 @@ interface Message {
 
 export default function App() {
     const version = browser.runtime.getManifest().version;
+    const windowRef = useRef<HTMLDivElement>(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -135,6 +136,40 @@ export default function App() {
                 if (timeout) clearTimeout(timeout);
             };
         }
+    }, [isExpanded]);
+
+    useEffect(() => {
+        if (!isExpanded) {
+            return;
+        }
+
+        const handlePointerDownOutside = (event: PointerEvent) => {
+            const currentWindow = windowRef.current;
+
+            if (!currentWindow) {
+                return;
+            }
+
+            if (event.composedPath().includes(currentWindow)) {
+                return;
+            }
+
+            setIsExpanded(false);
+        };
+
+        document.addEventListener(
+            'pointerdown',
+            handlePointerDownOutside,
+            true,
+        );
+
+        return () => {
+            document.removeEventListener(
+                'pointerdown',
+                handlePointerDownOutside,
+                true,
+            );
+        };
     }, [isExpanded]);
 
     const loadSettings = async () => {
@@ -362,6 +397,7 @@ export default function App() {
     return (
         <div className="ai-summary-floating-container">
             <div
+                ref={windowRef}
                 className="ai-summary-window"
                 data-theme={theme}
                 style={{

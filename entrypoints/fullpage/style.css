@@ -81,12 +81,10 @@ body {
 }
 
 .page-info-full {
-    background: var(--header-bg);
-    border: 1px solid var(--secondary-border);
     border-radius: 16px;
-    padding: 2rem;
-    margin-bottom: 2rem;
     backdrop-filter: blur(10px);
+    max-width: 900px;
+    margin: 0 auto 2rem;
 }
 
 .page-info-full h2 {

@@ -348,7 +348,7 @@ export default function App() {
     };
 
     const openSettings = () => {
-        browser.runtime.sendMessage({ action: 'openOptionsPage' });
+        browser.runtime.sendMessage({ action: 'openSettingsPage' });
     };
 
     const openInFullPage = async () => {
@@ -421,11 +421,7 @@ export default function App() {
                             gap: '8px',
                         }}
                     >
-                        <img
-                            src={icon}
-                            alt="AskWeb AI"
-                            className="logo-icon"
-                        />
+                        <img src={icon} alt="AskWeb AI" className="logo-icon" />
                         <div
                             style={{ display: 'flex', flexDirection: 'column' }}
                         >

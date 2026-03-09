@@ -1,0 +1,272 @@
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.settings-form .settings-section {
+    background: var(--header-bg);
+    border: 1px solid var(--secondary-border);
+    border-radius: 16px;
+    padding: 32px;
+    backdrop-filter: blur(10px);
+}
+
+.settings-form .settings-section h2 {
+    margin: 0 0 24px 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-white);
+}
+
+.settings-form .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.settings-form .section-header h2 {
+    margin: 0;
+}
+
+.settings-form .section-description {
+    margin: 0 0 16px 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.settings-form .provider-selection {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.settings-form .provider-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid var(--secondary-border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-form .provider-option:hover {
+    background: var(--secondary-bg);
+    border-color: var(--secondary-border-hover);
+}
+
+.settings-form .provider-option.selected {
+    background: var(--accent-bg-header);
+    border-color: var(--accent-color);
+}
+
+.settings-form .provider-option input[type='radio'] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.settings-form .provider-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-white);
+}
+
+.settings-form .form-group {
+    margin-bottom: 24px;
+}
+
+.settings-form .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.settings-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-white);
+    font-size: 14px;
+}
+
+.settings-form .textarea-field {
+    line-height: 1.6;
+}
+
+.settings-form .help-text {
+    margin: 8px 0 0 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.settings-form .help-text a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.settings-form .help-text a:hover {
+    color: var(--primary-border-color);
+    text-decoration: underline;
+}
+
+.settings-form .reset-btn,
+.settings-form .danger-btn,
+.settings-form .save-btn {
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.settings-form .reset-btn {
+    background: var(--secondary-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--secondary-border);
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+.settings-form .reset-btn:hover {
+    background: var(--secondary-bg-hover);
+    border-color: var(--secondary-border-hover);
+}
+
+.settings-form .danger-btn {
+    background: var(--error-bg);
+    color: var(--error-text);
+    border: 1px solid var(--error-border);
+    padding: 12px 24px;
+    font-size: 14px;
+}
+
+.settings-form .danger-btn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.settings-form .danger-btn:disabled,
+.settings-form .reset-btn:disabled,
+.settings-form .save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.settings-form .save-container {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+}
+
+.settings-form .save-btn {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 16px 48px;
+    box-shadow: 0 4px 15px var(--primary-shadow);
+    font-size: 16px;
+    min-width: 220px;
+}
+
+.settings-form .save-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--primary-shadow-hover);
+}
+
+.settings-form .save-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.settings-form .prompt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.settings-form .prompt-item {
+    border: 1px solid var(--secondary-border);
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--input-bg);
+    transition: all 0.2s ease;
+}
+
+.settings-form .prompt-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.settings-form .prompt-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.settings-form .default-prompt-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.settings-form .default-prompt-label input[type='radio'] {
+    cursor: pointer;
+}
+
+.settings-form .prompt-name-input {
+    flex: 1;
+    margin-bottom: 0;
+    color: var(--text-white);
+    font-weight: 600;
+}
+
+.settings-form .prompt-content-textarea {
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.settings-form .danger-btn-small {
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.settings-form .add-prompt-btn {
+    width: 100%;
+}
+
+.settings-form .question-prompt-section {
+    margin-top: 20px;
+    border-top: 1px solid var(--secondary-border);
+    padding-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .settings-form .settings-section {
+        padding: 24px;
+    }
+
+    .settings-form .provider-selection {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-form .section-header,
+    .settings-form .prompt-item-header,
+    .settings-form .prompt-item-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .settings-form .save-btn {
+        width: 100%;
+    }
+}

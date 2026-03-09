@@ -227,7 +227,7 @@ function App() {
     };
 
     const openSettings = () => {
-        browser.runtime.openOptionsPage();
+        browser.runtime.sendMessage({ action: 'openSettingsPage' });
     };
 
     const openInFullPage = async () => {
@@ -264,7 +264,9 @@ function App() {
                             paddingLeft: '4px',
                         }}
                     >
-                        <h1 style={{ margin: 0, lineHeight: '1.2' }}>AskWeb AI</h1>
+                        <h1 style={{ margin: 0, lineHeight: '1.2' }}>
+                            AskWeb AI
+                        </h1>
                         <small style={{ fontSize: '10px', opacity: 0.6 }}>
                             v{version}
                         </small>

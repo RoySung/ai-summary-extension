@@ -1,0 +1,45 @@
+.settings-page .fullpage-content {
+    max-width: 1040px;
+}
+
+.settings-page-title-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.settings-page-version {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+.settings-page .page-info-full {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+}
+
+.settings-page .page-info-full h2 {
+    margin-bottom: 12px;
+}
+
+.settings-page-description {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin: 0;
+    max-width: 680px;
+}
+
+.settings-content-shell {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .settings-page .fullpage-content {
+        max-width: 100%;
+    }
+
+    .settings-content-shell {
+        max-width: 100%;
+    }
+}

@@ -53,7 +53,7 @@ export default defineBackground(() => {
             await browser.storage.local.set({ [`fullPageData_${id}`]: data });
 
             const fullPageUrl = browser.runtime.getURL(
-                `/fullpage.html?id=${id}&auto=true`
+                `/fullpage.html?id=${id}&auto=true`,
             );
             browser.tabs.create({ url: fullPageUrl });
         } else if (info.menuItemId === CONTEXT_MENU_IDS.SUMMARIZE_FULL_PAGE) {
@@ -61,7 +61,7 @@ export default defineBackground(() => {
             try {
                 const contentData = await handleGetContent(
                     { action: 'getContent', tabId: tab.id },
-                    {} as any
+                    {} as any,
                 );
 
                 const id =
@@ -79,13 +79,13 @@ export default defineBackground(() => {
                 });
 
                 const fullPageUrl = browser.runtime.getURL(
-                    `/fullpage.html?id=${id}&auto=true`
+                    `/fullpage.html?id=${id}&auto=true`,
                 );
                 browser.tabs.create({ url: fullPageUrl });
             } catch (error) {
                 console.error(
                     'Failed to handle full page summary from context menu:',
-                    error
+                    error,
                 );
             }
         }
@@ -103,7 +103,7 @@ export default defineBackground(() => {
                 currentState.error
             ) {
                 console.log(
-                    `Resetting state for tab ${tabId} due to navigation`
+                    `Resetting state for tab ${tabId} due to navigation`,
                 );
                 TabStateManager.updateState(tabId, {
                     isLoading: false,
@@ -223,6 +223,10 @@ interface OpenOptionsPageRequest {
     action: 'openOptionsPage';
 }
 
+interface OpenSettingsPageRequest {
+    action: 'openSettingsPage';
+}
+
 interface OpenFullPageRequest {
     action: 'openFullPage';
     url: string;
@@ -237,6 +241,7 @@ type MessageRequest =
     | QuestionRequest
     | GetContentRequest
     | OpenOptionsPageRequest
+    | OpenSettingsPageRequest
     | OpenFullPageRequest
     | GetSummarizationStateRequest;
 
@@ -245,8 +250,17 @@ type MessageRequest =
  */
 async function handleMessage(
     message: MessageRequest,
-    sender: Runtime.MessageSender
+    sender: Runtime.MessageSender,
 ): Promise<any> {
+    switch (message.action) {
+        case 'openOptionsPage':
+        case 'openSettingsPage':
+            return handleOpenSettingsPage();
+
+        case 'openFullPage':
+            return handleOpenFullPage(message);
+    }
+
     // Use sender.tab.id for content scripts, or derive from active tab for popup
     let tabId = sender.tab?.id;
 
@@ -276,12 +290,6 @@ async function handleMessage(
         case 'getContent':
             return handleGetContent({ ...message, tabId: tabId }, sender);
 
-        case 'openOptionsPage':
-            return handleOpenOptionsPage();
-
-        case 'openFullPage':
-            return handleOpenFullPage(message);
-
         case 'getSummarizationState':
             return TabStateManager.getState(tabId);
 
@@ -303,7 +311,7 @@ async function handleMessage(
 function getPromptConfigFromSaved(
     promptText: string | undefined,
     promptId: string | undefined,
-    settings: Settings
+    settings: Settings,
 ): { resolvedPromptText: string; resolvedPromptId: string } {
     let resolvedPromptText = promptText || '';
     let resolvedPromptId = promptId || '';
@@ -312,7 +320,7 @@ function getPromptConfigFromSaved(
         // If ID is provided, look it up
         if (resolvedPromptId) {
             const savedPrompt = settings.savedPrompts?.find(
-                (p) => p.id === resolvedPromptId
+                (p) => p.id === resolvedPromptId,
             );
             if (savedPrompt) {
                 resolvedPromptText = savedPrompt.content;
@@ -323,7 +331,7 @@ function getPromptConfigFromSaved(
         if (!resolvedPromptText) {
             if (settings.savedPrompts && settings.defaultPromptId) {
                 const defaultPrompt = settings.savedPrompts.find(
-                    (p) => p.id === settings.defaultPromptId
+                    (p) => p.id === settings.defaultPromptId,
                 );
                 if (defaultPrompt) {
                     resolvedPromptText = defaultPrompt.content;
@@ -337,17 +345,19 @@ function getPromptConfigFromSaved(
 }
 
 /**
- * Handle open options page request
+ * Handle open settings page request
  */
-async function handleOpenOptionsPage(): Promise<void> {
-    return browser.runtime.openOptionsPage();
+async function handleOpenSettingsPage(): Promise<Tabs.Tab> {
+    return browser.tabs.create({
+        url: browser.runtime.getURL('/settings.html'),
+    });
 }
 
 /**
  * Handle open full page request
  */
 async function handleOpenFullPage(
-    request: OpenFullPageRequest
+    request: OpenFullPageRequest,
 ): Promise<Tabs.Tab> {
     return browser.tabs.create({ url: request.url });
 }
@@ -357,7 +367,7 @@ async function handleOpenFullPage(
  */
 async function handleSummarize(
     request: SummarizeRequest,
-    tabId: number
+    tabId: number,
 ): Promise<{ summary: string | null; error?: string }> {
     const { content, url, title, forceRefresh, promptText, promptId } = request;
 
@@ -406,7 +416,7 @@ async function handleSummarize(
 
             if (!apiKey) {
                 throw new Error(
-                    `Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`
+                    `Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`,
                 );
             }
 
@@ -445,7 +455,7 @@ async function handleSummarize(
  * Handle question request
  */
 async function handleQuestion(
-    request: QuestionRequest
+    request: QuestionRequest,
 ): Promise<{ answer: string }> {
     const { question, context, summary } = request;
 
@@ -460,7 +470,7 @@ async function handleQuestion(
 
     if (!apiKey) {
         throw new Error(
-            `Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`
+            `Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`,
         );
     }
 
@@ -484,7 +494,7 @@ async function handleQuestion(
  */
 async function handleGetContent(
     request: GetContentRequest,
-    sender: Runtime.MessageSender
+    sender: Runtime.MessageSender,
 ): Promise<{
     title: string;
     url: string;
@@ -518,7 +528,7 @@ async function handleGetContent(
             const url = window.location.href;
 
             const metaDescription = document.querySelector(
-                'meta[name="description"]'
+                'meta[name="description"]',
             );
             const description = metaDescription?.getAttribute('content') || '';
 

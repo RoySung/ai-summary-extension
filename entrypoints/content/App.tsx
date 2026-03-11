@@ -6,7 +6,9 @@ import {
     type Theme,
     type Settings,
     DEFAULT_SETTINGS,
+    STORAGE_KEYS,
 } from '../../utils/constants';
+import { useTranslate } from '../../hooks/useTranslate';
 import SplitButton from '../../components/SplitButton';
 import icon from '../../assets/icon.png';
 import '../../assets/theme.css';
@@ -32,17 +34,16 @@ export default function App() {
     const [showFloatingBall, setShowFloatingBall] = useState(true);
     const [windowSize, setWindowSize] = useState({ width: 380, height: 500 });
     const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+    const t = useTranslate(settings.language);
 
     useEffect(() => {
         loadSettings();
         initializeState();
 
-        const handleStorageChange = (changes: any) => {
-            if (changes.theme) {
-                setTheme(changes.theme.newValue);
-            }
-            if (changes.showFloatingBall) {
-                setShowFloatingBall(changes.showFloatingBall.newValue);
+        const handleStorageChange = (changes: Record<string, unknown>) => {
+            const settingKeys = Object.values(STORAGE_KEYS);
+            if (Object.keys(changes).some((key) => settingKeys.includes(key))) {
+                loadSettings();
             }
         };
 
@@ -227,7 +228,7 @@ export default function App() {
             setPageContent(content);
         } catch (err: any) {
             console.error('Failed to load page content:', err);
-            setError(err.message || 'Failed to load page content');
+            setError(err.message || t('failedToLoadPageContent'));
         }
     };
 
@@ -272,7 +273,7 @@ export default function App() {
         promptId?: string,
     ) => {
         if (!pageContent) {
-            setError('No page content available');
+            setError(t('noPageContentAvailable'));
             return;
         }
 
@@ -301,7 +302,7 @@ export default function App() {
             // Otherwise wait for listener update
         } catch (err: any) {
             console.error('Summarization error:', err);
-            setError(err.message || 'Failed to generate summary');
+            setError(err.message || t('failedToGenerateSummary'));
             setLoading(false);
         }
     };
@@ -334,7 +335,7 @@ export default function App() {
             }
         } catch (err: any) {
             console.error('Question error:', err);
-            setError(err.message || 'Failed to get answer');
+            setError(err.message || t('failedToGetAnswer'));
         } finally {
             setLoading(false);
         }
@@ -382,7 +383,7 @@ export default function App() {
                 <button
                     className="ai-summary-floating-ball"
                     onClick={toggleExpand}
-                    title="Open AskWeb AI"
+                    title={t('openAskWebAi')}
                 >
                     <img
                         src={icon}
@@ -410,7 +411,7 @@ export default function App() {
                 <div
                     className="ai-summary-resize-handle"
                     onMouseDown={handleResizeMouseDown}
-                    title="Drag to resize"
+                    title={t('dragToResize')}
                 />
                 <div className="ai-summary-header">
                     <div
@@ -440,7 +441,7 @@ export default function App() {
                         <button
                             className="settings-btn"
                             onClick={openSettings}
-                            title="Settings"
+                            title={t('openSettings')}
                             style={{ fontSize: '16px' }}
                         >
                             ⚙️
@@ -448,7 +449,7 @@ export default function App() {
                         <button
                             className="ai-summary-icon-btn"
                             onClick={handleHideFloatingBall}
-                            title="Hide Floating Ball"
+                            title={t('hideFloatingBall')}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -468,7 +469,7 @@ export default function App() {
                         <button
                             className="ai-summary-icon-btn"
                             onClick={toggleExpand}
-                            title="Minimize"
+                            title={t('minimize')}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -515,10 +516,10 @@ export default function App() {
                             <SplitButton
                                 variant="primary"
                                 icon="✨"
-                                text="Summarize"
+                                text={t('summarize')}
                                 disabled={!pageContent}
                                 loading={loading}
-                                loadingText="Summarizing..."
+                                loadingText={t('summarizing')}
                                 settings={settings}
                                 onAction={(promptText, promptId) =>
                                     handleSummarize(false, promptText, promptId)
@@ -531,7 +532,7 @@ export default function App() {
                     {summary && (
                         <>
                             <div className="summary">
-                                <h3>Summary</h3>
+                                <h3>{t('summary')}</h3>
                                 <div className="summary-content-wrapper">
                                     <div className="summary-content markdown-content">
                                         <ReactMarkdown>{summary}</ReactMarkdown>
@@ -550,9 +551,9 @@ export default function App() {
                                     <SplitButton
                                         variant="secondary"
                                         icon="🔄"
-                                        text="Re-summarize"
+                                        text={t('reSummarize')}
                                         loading={loading}
-                                        loadingText="..."
+                                        loadingText={t('reSummarizing')}
                                         settings={settings}
                                         onAction={(promptText, promptId) =>
                                             handleSummarize(
@@ -569,13 +570,13 @@ export default function App() {
                                         className="primary-btn"
                                         style={{ width: '100%' }}
                                     >
-                                        📄 Full Page
+                                        📄 {t('fullPage')}
                                     </button>
                                 </div>
                             </div>
 
                             <div className="chat">
-                                <h3>Ask Questions</h3>
+                                <h3>{t('askQuestions')}</h3>
                                 {messages.length > 0 && (
                                     <div className="messages">
                                         {messages.map((msg, idx) => (
@@ -601,7 +602,9 @@ export default function App() {
                                             setQuestion(e.target.value)
                                         }
                                         onKeyPress={handleKeyPress}
-                                        placeholder="Ask a question..."
+                                        placeholder={t(
+                                            'askQuestionPlaceholder',
+                                        )}
                                         disabled={loading}
                                         className="question-input"
                                     />

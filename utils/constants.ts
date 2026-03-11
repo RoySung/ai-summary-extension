@@ -73,6 +73,7 @@ export const STORAGE_KEYS = {
     DEFAULT_PROMPT_ID: 'defaultPromptId', // New: ID of the default prompt
     CACHE_DATA: 'cacheData',
     THEME: 'theme',
+    LANGUAGE: 'language',
     SHOW_FLOATING_BALL: 'showFloatingBall',
 };
 
@@ -136,9 +137,11 @@ export const DEFAULT_SETTINGS = {
     savedPrompts: PRESET_PROMPTS,
     defaultPromptId: 'default',
     theme: 'warm' as Theme,
+    language: 'en-US' as Language,
     showFloatingBall: true,
 };
 
 export type Theme = 'warm' | 'cool' | 'light';
+export type Language = 'en-US' | 'zh-TW';
 export type Settings = typeof DEFAULT_SETTINGS;
 export type ApiProvider = 'gemini' | 'openai';

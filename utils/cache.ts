@@ -1,4 +1,8 @@
-import { CACHE_EXPIRATION_MS, CACHE_KEY_PREFIX } from './constants';
+import {
+    CACHE_EXPIRATION_MS,
+    CACHE_KEY_PREFIX,
+    type Language,
+} from './constants';
 
 interface CacheEntry {
     summary: string;
@@ -29,19 +33,27 @@ function simpleHash(str: string): string {
  */
 export class CacheManager {
     /**
-     * Generate cache key from URL and promptId
+     * Generate cache key from URL, promptId, and language
      */
-    static generateKey(url: string, promptId?: string): string {
+    static generateKey(
+        url: string,
+        promptId?: string,
+        language: Language = 'en-US',
+    ): string {
         const urlHash = simpleHash(url);
-        const key = `${CACHE_KEY_PREFIX}${urlHash}_${promptId || 'default'}`;
+        const key = `${CACHE_KEY_PREFIX}${urlHash}__${promptId || 'default'}__${language}`;
         return key;
     }
 
     /**
      * Get cached summary
      */
-    static async get(url: string, promptId?: string): Promise<string | null> {
-        const key = this.generateKey(url, promptId);
+    static async get(
+        url: string,
+        promptId?: string,
+        language: Language = 'en-US',
+    ): Promise<string | null> {
+        const key = this.generateKey(url, promptId, language);
         const result = await browser.storage.local.get(key);
 
         if (!result[key]) {
@@ -57,7 +69,14 @@ export class CacheManager {
             return null;
         }
 
-        console.log('Cache hit for URL:', url, 'promptId:', promptId);
+        console.log(
+            'Cache hit for URL:',
+            url,
+            'promptId:',
+            promptId,
+            'language:',
+            language,
+        );
         return entry.summary;
     }
 
@@ -68,8 +87,9 @@ export class CacheManager {
         url: string,
         summary: string,
         promptId?: string,
+        language: Language = 'en-US',
     ): Promise<void> {
-        const key = this.generateKey(url, promptId);
+        const key = this.generateKey(url, promptId, language);
 
         const entry: CacheEntry = {
             summary,
@@ -79,7 +99,14 @@ export class CacheManager {
         };
 
         await browser.storage.local.set({ [key]: entry });
-        console.log('Cached summary for URL:', url, 'promptId:', promptId);
+        console.log(
+            'Cached summary for URL:',
+            url,
+            'promptId:',
+            promptId,
+            'language:',
+            language,
+        );
     }
 
     /**
@@ -89,7 +116,9 @@ export class CacheManager {
         const result = await browser.storage.local.get(null);
         const suffix = `_${promptId}`;
         const keysToRemove = Object.keys(result).filter(
-            (key) => key.startsWith(CACHE_KEY_PREFIX) && key.endsWith(suffix),
+            (key) =>
+                key.startsWith(CACHE_KEY_PREFIX) &&
+                (key.endsWith(suffix) || key.includes(`__${promptId}__`)),
         );
 
         if (keysToRemove.length > 0) {

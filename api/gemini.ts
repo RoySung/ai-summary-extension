@@ -14,6 +14,17 @@ export class GeminiAPI {
         this.model = model;
     }
 
+    private withLanguageInstruction(
+        prompt: string,
+        responseLanguageInstruction?: string,
+    ): string {
+        if (!responseLanguageInstruction) {
+            return prompt;
+        }
+
+        return `${prompt}\n\n${responseLanguageInstruction}`;
+    }
+
     /**
      * Generate content using Gemini API
      */
@@ -61,7 +72,7 @@ export class GeminiAPI {
 
         // Check if ends with list item indicator without completion
         const endsWithListItem = /^.*[-•*]\s*[^.\n]*$/.test(
-            trimmed.split('\n').pop() || ''
+            trimmed.split('\n').pop() || '',
         );
 
         return endsWithIncomplete || endsWithContinuation || endsWithListItem;
@@ -79,7 +90,11 @@ export class GeminiAPI {
      * 2. Summarize each chunk
      * 3. Create final summary from all chunk summaries
      */
-    async summarize(content: string, customPrompt?: string): Promise<string> {
+    async summarize(
+        content: string,
+        customPrompt?: string,
+        responseLanguageInstruction?: string,
+    ): Promise<string> {
         const modelConfig =
             MODELS.GEMINI[this.model as keyof typeof MODELS.GEMINI];
         // Default to conservative 500k if config not found (shouldn't happen)
@@ -94,12 +109,17 @@ export class GeminiAPI {
                 ? customPrompt.replace('{content}', content)
                 : `Please provide a concise and comprehensive summary of the following content:\n\n${content}`;
 
-            return await this.generateContent(prompt);
+            return await this.generateContent(
+                this.withLanguageInstruction(
+                    prompt,
+                    responseLanguageInstruction,
+                ),
+            );
         }
 
         // Multi-chunk processing (rarely needed with 500K token limit)
         console.log(
-            `📚 Content is exceptionally long (${chunks.length} chunks), processing in parts...`
+            `📚 Content is exceptionally long (${chunks.length} chunks), processing in parts...`,
         );
         const chunkSummaries: string[] = [];
 
@@ -114,7 +134,12 @@ ${chunks[i]}
 
 Focus on key points, important details, and main ideas. Keep the summary concise but comprehensive.`;
 
-            const chunkSummary = await this.generateContent(chunkPrompt);
+            const chunkSummary = await this.generateContent(
+                this.withLanguageInstruction(
+                    chunkPrompt,
+                    responseLanguageInstruction,
+                ),
+            );
             chunkSummaries.push(chunkSummary);
 
             // Small delay to avoid rate limiting
@@ -125,13 +150,13 @@ Focus on key points, important details, and main ideas. Keep the summary concise
 
         // Final synthesis - combine all chunk summaries into one comprehensive summary
         console.log(
-            `🔄 Creating final comprehensive summary from ${chunkSummaries.length} parts...`
+            `🔄 Creating final comprehensive summary from ${chunkSummaries.length} parts...`,
         );
 
         const finalPrompt = customPrompt
             ? customPrompt.replace(
                   '{content}',
-                  chunkSummaries.join('\n\n---\n\n')
+                  chunkSummaries.join('\n\n---\n\n'),
               )
             : `I have summaries of different parts of a document. Please synthesize these into one coherent, comprehensive summary that covers all main points:
 
@@ -145,7 +170,12 @@ Create a well-structured final summary that:
 3. Maintains logical flow
 4. Highlights the most important information`;
 
-        const finalSummary = await this.generateContent(finalPrompt);
+        const finalSummary = await this.generateContent(
+            this.withLanguageInstruction(
+                finalPrompt,
+                responseLanguageInstruction,
+            ),
+        );
         console.log('✅ Final summary complete!');
 
         return finalSummary;
@@ -158,7 +188,8 @@ Create a well-structured final summary that:
         context: string,
         summary: string,
         question: string,
-        customPrompt?: string
+        customPrompt?: string,
+        responseLanguageInstruction?: string,
     ): Promise<string> {
         const prompt = customPrompt
             ? customPrompt
@@ -177,6 +208,8 @@ Question: ${question}
 
 Answer:`;
 
-        return await this.generateContent(prompt);
+        return await this.generateContent(
+            this.withLanguageInstruction(prompt, responseLanguageInstruction),
+        );
     }
 }

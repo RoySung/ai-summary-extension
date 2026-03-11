@@ -5,7 +5,10 @@ import {
     type Theme,
     type Settings,
     DEFAULT_SETTINGS,
+    STORAGE_KEYS,
 } from '../../utils/constants';
+import { translate } from '../../utils/i18n';
+import { useTranslate } from '../../hooks/useTranslate';
 import SplitButton from '../../components/SplitButton';
 import icon from '../../assets/icon.png';
 import '../../assets/theme.css';
@@ -39,6 +42,7 @@ export default function FullPage() {
     const [theme, setTheme] = useState<Theme>('warm');
     const [isSelection, setIsSelection] = useState(false);
     const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+    const t = useTranslate(settings.language);
 
     useEffect(() => {
         if (pageTitle) {
@@ -50,8 +54,17 @@ export default function FullPage() {
         loadSettings();
         // Get data from browser storage
 
+        const handleStorageChange = (changes: Record<string, unknown>) => {
+            const settingKeys = Object.values(STORAGE_KEYS);
+            if (Object.keys(changes).some((key) => settingKeys.includes(key))) {
+                loadSettings();
+            }
+        };
+
         const loadData = async () => {
             try {
+                const currentSettings = await StorageManager.getSettings();
+
                 // Get ID from URL
                 const params = new URLSearchParams(window.location.search);
                 const id = params.get('id');
@@ -81,14 +94,29 @@ export default function FullPage() {
                         );
                     }
                 } else {
-                    setError('No data found. Please generate a summary first.');
+                    setError(
+                        translate(currentSettings.language, 'noDataFound'),
+                    );
                 }
             } catch (err) {
                 console.error('Failed to load data:', err);
-                setError('Failed to load summary data');
+                const currentSettings = await StorageManager.getSettings();
+                setError(
+                    translate(
+                        currentSettings.language,
+                        'failedToLoadSummaryData',
+                    ),
+                );
             }
         };
+        browser.storage.onChanged.addListener(handleStorageChange as any);
         loadData();
+
+        return () => {
+            browser.storage.onChanged.removeListener(
+                handleStorageChange as any,
+            );
+        };
     }, []);
 
     const performSummarize = async (
@@ -138,7 +166,7 @@ export default function FullPage() {
             }
         } catch (err: any) {
             console.error('Summarization error:', err);
-            setError(err.message || 'Failed to generate summary');
+            setError(err.message || t('failedToGenerateSummary'));
         } finally {
             setLoading(false);
         }
@@ -178,7 +206,7 @@ export default function FullPage() {
             }
         } catch (err: any) {
             console.error('Question error:', err);
-            setError(err.message || 'Failed to get answer');
+            setError(err.message || t('failedToGetAnswer'));
         } finally {
             setLoading(false);
         }
@@ -193,7 +221,7 @@ export default function FullPage() {
 
     const handleSummarize = async (promptText?: string, promptId?: string) => {
         if (!pageContent) {
-            setError('No page content available');
+            setError(t('noPageContentAvailable'));
             return;
         }
         await performSummarize(
@@ -211,11 +239,7 @@ export default function FullPage() {
             <header className="fullpage-header">
                 <div className="header-content">
                     <div className="logo-container">
-                        <img
-                            src={icon}
-                            alt="AskWeb AI"
-                            className="logo-icon"
-                        />
+                        <img src={icon} alt="AskWeb AI" className="logo-icon" />
                         <div
                             style={{
                                 display: 'flex',
@@ -223,7 +247,9 @@ export default function FullPage() {
                                 justifyContent: 'center',
                             }}
                         >
-                            <h1 style={{ margin: 0, lineHeight: '1.2' }}>AskWeb AI</h1>
+                            <h1 style={{ margin: 0, lineHeight: '1.2' }}>
+                                AskWeb AI
+                            </h1>
                             <small style={{ fontSize: '12px', opacity: 0.6 }}>
                                 v{version}
                             </small>
@@ -236,7 +262,7 @@ export default function FullPage() {
                             rel="noopener noreferrer"
                             className="page-link"
                         >
-                            Visit Original Page ↗
+                            {t('visitOriginalPage')}
                         </a>
                     )}
                 </div>
@@ -244,7 +270,7 @@ export default function FullPage() {
 
             <main className="fullpage-content">
                 <div className="page-info-full">
-                    <h2>{pageTitle || 'Loading...'}</h2>
+                    <h2>{pageTitle || t('loading')}</h2>
                     {pageUrl && <p className="page-url">{pageUrl}</p>}
                 </div>
 
@@ -260,7 +286,7 @@ export default function FullPage() {
                         }}
                     >
                         <h3 style={{ marginTop: 0, fontSize: '1.1em' }}>
-                            Source Text
+                            {t('sourceText')}
                         </h3>
                         <div
                             style={{
@@ -286,14 +312,14 @@ export default function FullPage() {
                     <>
                         <div className="summary-full">
                             <div className="section-header">
-                                <h3>Summary</h3>
+                                <h3>{t('summary')}</h3>
                                 <SplitButton
                                     className="resummarize-btn"
                                     variant="secondary"
                                     icon="🔄"
-                                    text="Re-summarize"
+                                    text={t('reSummarize')}
                                     loading={loading}
-                                    loadingText="Re-summarizing..."
+                                    loadingText={t('reSummarizing')}
                                     settings={settings}
                                     onAction={(promptText, promptId) =>
                                         handleSummarize(promptText, promptId)
@@ -310,7 +336,7 @@ export default function FullPage() {
                         </div>
 
                         <div className="chat-full">
-                            <h3>Ask Questions</h3>
+                            <h3>{t('askQuestions')}</h3>
                             {messages.length > 0 && (
                                 <div className="messages">
                                     {messages.map((msg, idx) => (
@@ -336,7 +362,9 @@ export default function FullPage() {
                                         setQuestion(e.target.value)
                                     }
                                     onKeyPress={handleKeyPress}
-                                    placeholder="Ask a question about this page..."
+                                    placeholder={t(
+                                        'askQuestionPagePlaceholder',
+                                    )}
                                     disabled={loading}
                                     className="question-input"
                                 />
@@ -354,7 +382,7 @@ export default function FullPage() {
 
                 {!summary && !error && (
                     <div className="no-summary">
-                        <p>Loading summary...</p>
+                        <p>{t('loadingSummary')}</p>
                     </div>
                 )}
             </main>

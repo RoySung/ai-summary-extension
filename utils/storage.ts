@@ -9,7 +9,7 @@ export class StorageManager {
      */
     static async getSettings(): Promise<Settings> {
         const result = await browser.storage.local.get(
-            Object.values(STORAGE_KEYS)
+            Object.values(STORAGE_KEYS),
         );
 
         return {
@@ -38,6 +38,8 @@ export class StorageManager {
                 result[STORAGE_KEYS.DEFAULT_PROMPT_ID] ||
                 DEFAULT_SETTINGS.defaultPromptId,
             theme: result[STORAGE_KEYS.THEME] || DEFAULT_SETTINGS.theme,
+            language:
+                result[STORAGE_KEYS.LANGUAGE] || DEFAULT_SETTINGS.language,
             showFloatingBall:
                 result[STORAGE_KEYS.SHOW_FLOATING_BALL] ??
                 DEFAULT_SETTINGS.showFloatingBall,
@@ -78,6 +80,9 @@ export class StorageManager {
         if (settings.theme !== undefined) {
             storageData[STORAGE_KEYS.THEME] = settings.theme;
         }
+        if (settings.language !== undefined) {
+            storageData[STORAGE_KEYS.LANGUAGE] = settings.language;
+        }
         if (settings.showFloatingBall !== undefined) {
             storageData[STORAGE_KEYS.SHOW_FLOATING_BALL] =
                 settings.showFloatingBall;
@@ -90,7 +95,7 @@ export class StorageManager {
      * Get a specific setting value
      */
     static async getSetting<K extends keyof Settings>(
-        key: K
+        key: K,
     ): Promise<Settings[K]> {
         const settings = await this.getSettings();
         return settings[key];

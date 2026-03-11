@@ -1,11 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SettingsContent from '../../components/SettingsContent';
-import { type Theme } from '../../utils/constants';
+import { type Language, type Theme } from '../../utils/constants';
+import { useTranslate } from '../../hooks/useTranslate';
+import { StorageManager } from '../../utils/storage';
 import icon from '../../assets/icon.png';
 
 export default function SettingsApp() {
     const version = browser.runtime.getManifest().version;
     const [theme, setTheme] = useState<Theme>('warm');
+    const [language, setLanguage] = useState<Language>('en-US');
+    const t = useTranslate(language);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            const settings = await StorageManager.getSettings();
+            setTheme(settings.theme);
+            setLanguage(settings.language);
+        };
+
+        loadSettings();
+    }, []);
 
     return (
         <div className="fullpage-app settings-page" data-theme={theme}>
@@ -16,7 +30,7 @@ export default function SettingsApp() {
                         <div className="settings-page-title-group">
                             <h1>AskWeb AI</h1>
                             <small className="settings-page-version">
-                                Settings · v{version}
+                                {t('settings')} · v{version}
                             </small>
                         </div>
                     </div>
@@ -25,15 +39,17 @@ export default function SettingsApp() {
 
             <main className="fullpage-content">
                 <section className="page-info-full">
-                    <h2>Settings</h2>
+                    <h2>{t('settings')}</h2>
                     <p className="settings-page-description">
-                        Configure your AI provider, models, theme, prompts, and
-                        cache behavior in one dedicated page.
+                        {t('settingsDescription')}
                     </p>
                 </section>
 
                 <div className="settings-content-shell">
-                    <SettingsContent onThemeChange={setTheme} />
+                    <SettingsContent
+                        onThemeChange={setTheme}
+                        onLanguageChange={setLanguage}
+                    />
                 </div>
             </main>
         </div>

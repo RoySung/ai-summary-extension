@@ -10,6 +10,7 @@ AskWeb AI is a powerful and elegant Chrome extension that helps you summarize an
 - **🎯 Floating Mode**: A non-intrusive floating ball allows quick access to the summarizer. It expands into a fully **resizable window**, letting you browse and read summaries side-by-side.
 - **📄 Full Page View**: Switch to a dedicated immersive view for reading long summaries or managing complex Q&A sessions.
 - **🎨 Theme Selection**: Customize the look and feel with built-in themes
+- **🌐 Language Setting**: Switch between English and Traditional Chinese for the extension UI, context menu labels, and AI-generated summaries and answers.
 
 ## 🤖 Supported AI Providers
 
@@ -51,9 +52,10 @@ AskWeb AI is a powerful and elegant Chrome extension that helps you summarize an
 4.  **Enter API Key**:
     - **Gemini**: Get it from [Google AI Studio](https://aistudio.google.com/apikey).
     - **OpenAI**: Get it from [OpenAI Platform](https://platform.openai.com/api-keys).
-5.  **Select Theme**: Choose your preferred visual style (Warm or Cool).
-6.  **Custom Prompts** (Optional): Customize the instructions for summarization and Q&A to fit your specific needs.
-7.  **Floating Ball**: You can toggle the visibility of the floating ball on specific pages if desired.
+5.  **Choose Language**: Select English or Traditional Chinese. This also controls the language used for summaries, answers, and context menu entries.
+6.  **Select Theme**: Choose your preferred visual style (Warm, Cool, or Light).
+7.  **Custom Prompts** (Optional): Customize the instructions for summarization and Q&A to fit your specific needs.
+8.  **Floating Ball**: You can toggle the visibility of the floating ball on specific pages if desired.
 
 ## 📖 Usage Guide
 

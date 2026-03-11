@@ -1,19 +1,35 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import '../../assets/theme.css';
 import '../../assets/common.css';
 import '../fullpage/style.css';
 import icon from '../../assets/icon.png';
+import { StorageManager } from '../../utils/storage';
+import { type Language, type Theme } from '../../utils/constants';
+import { useTranslate } from '../../hooks/useTranslate';
 
 function OptionsRedirect() {
     const settingsUrl = browser.runtime.getURL('/settings.html');
+    const [theme, setTheme] = useState<Theme>('warm');
+    const [language, setLanguage] = useState<Language>('en-US');
+    const t = useTranslate(language);
 
     useEffect(() => {
-        window.location.replace(settingsUrl);
+        const redirectToSettings = async () => {
+            const settings = await StorageManager.getSettings();
+            setTheme(settings.theme);
+            setLanguage(settings.language);
+
+            setTimeout(() => {
+                window.location.replace(settingsUrl);
+            }, 0);
+        };
+
+        redirectToSettings();
     }, [settingsUrl]);
 
     return (
-        <div className="fullpage-app" data-theme="warm">
+        <div className="fullpage-app" data-theme={theme}>
             <header className="fullpage-header">
                 <div className="header-content">
                     <div className="logo-container">
@@ -25,7 +41,7 @@ function OptionsRedirect() {
                                 AskWeb AI
                             </h1>
                             <small style={{ fontSize: '12px', opacity: 0.6 }}>
-                                Redirecting to Settings
+                                {t('redirectingToSettings')}
                             </small>
                         </div>
                     </div>
@@ -34,11 +50,11 @@ function OptionsRedirect() {
 
             <main className="fullpage-content">
                 <div className="no-summary">
-                    <p>Redirecting to the new settings page...</p>
+                    <p>{t('redirectingToNewSettingsPage')}</p>
                     <p style={{ marginTop: '16px' }}>
-                        If nothing happens,{' '}
+                        {t('ifNothingHappens')}{' '}
                         <a href={settingsUrl} className="page-link">
-                            open settings here
+                            {t('openSettingsHere')}
                         </a>
                         .
                     </p>

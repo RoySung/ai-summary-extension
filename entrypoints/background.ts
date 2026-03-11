@@ -2,32 +2,62 @@ import { GeminiAPI } from '../api/gemini';
 import { OpenAIAPI } from '../api/openai';
 import { StorageManager } from '../utils/storage';
 import { CacheManager } from '../utils/cache';
-import { CONTEXT_MENU_IDS, type Settings } from '../utils/constants';
+import {
+    CONTEXT_MENU_IDS,
+    STORAGE_KEYS,
+    type Language,
+    type Settings,
+} from '../utils/constants';
+import { translate } from '../utils/i18n';
 import type { Runtime, Tabs } from 'webextension-polyfill';
+
+async function syncContextMenus(language?: Language): Promise<void> {
+    const resolvedLanguage =
+        language || (await StorageManager.getSettings()).language;
+
+    await browser.contextMenus.removeAll();
+
+    browser.contextMenus.create({
+        id: CONTEXT_MENU_IDS.SUMMARIZE_SELECTION,
+        title: translate(resolvedLanguage, 'summarizeSelection'),
+        contexts: ['selection'],
+    });
+    browser.contextMenus.create({
+        id: CONTEXT_MENU_IDS.SUMMARIZE_FULL_PAGE,
+        title: translate(resolvedLanguage, 'summarizeFullPage'),
+        contexts: ['page'],
+    });
+}
 
 export default defineBackground(() => {
     console.log('AskWeb AI background worker initialized');
 
     // Clean expired cache entries on startup
     CacheManager.cleanExpired();
+    void syncContextMenus();
 
     // Set up context menus
     browser.runtime.onInstalled.addListener(() => {
-        browser.contextMenus.create({
-            id: CONTEXT_MENU_IDS.SUMMARIZE_SELECTION,
-            title: 'Summarize Selection',
-            contexts: ['selection'],
-        });
-        browser.contextMenus.create({
-            id: CONTEXT_MENU_IDS.SUMMARIZE_FULL_PAGE,
-            title: 'Summarize Full Page',
-            contexts: ['page'],
-        });
+        void syncContextMenus();
+    });
+
+    browser.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName !== 'local') {
+            return;
+        }
+
+        if (changes[STORAGE_KEYS.LANGUAGE]?.newValue) {
+            void syncContextMenus(
+                changes[STORAGE_KEYS.LANGUAGE].newValue as Language,
+            );
+        }
     });
 
     // Handle context menu clicks
     browser.contextMenus.onClicked.addListener(async (info, tab) => {
         if (!tab?.id) return;
+
+        const settings = await StorageManager.getSettings();
 
         if (
             info.menuItemId === CONTEXT_MENU_IDS.SUMMARIZE_SELECTION &&
@@ -45,7 +75,11 @@ export default defineBackground(() => {
                     url: tab.url || '',
                     title: tab.title || '',
                 },
-                pageTitle: `Selected Text: ${tab.title || 'Unknown Page'}`,
+                pageTitle: translate(settings.language, 'selectedTextTitle', {
+                    title:
+                        tab.title ||
+                        translate(settings.language, 'unknownPage'),
+                }),
                 pageUrl: tab.url || '',
                 isSelection: true,
             };
@@ -275,7 +309,10 @@ async function handleMessage(
 
     if (!tabId) {
         console.warn('Could not determine tab ID for message:', message);
-        return { error: 'Could not determine active tab' };
+        const settings = await StorageManager.getSettings();
+        return {
+            error: translate(settings.language, 'couldNotDetermineActiveTab'),
+        };
     }
 
     console.log(`Received message: ${message.action} for tab ${tabId}`);
@@ -370,6 +407,7 @@ async function handleSummarize(
     tabId: number,
 ): Promise<{ summary: string | null; error?: string }> {
     const { content, url, title, forceRefresh, promptText, promptId } = request;
+    let fallbackErrorMessage = 'Failed to generate summary';
 
     const currentState = TabStateManager.getState(tabId);
 
@@ -389,6 +427,14 @@ async function handleSummarize(
     try {
         // Get settings
         const settings = await StorageManager.getSettings();
+        fallbackErrorMessage = translate(
+            settings.language,
+            'failedToGenerateSummary',
+        );
+        const responseLanguageInstruction = translate(
+            settings.language,
+            'responseLanguageInstruction',
+        );
 
         // Resolve prompt configuration
         const { resolvedPromptText, resolvedPromptId } =
@@ -398,7 +444,11 @@ async function handleSummarize(
         let summary: string | null = null;
 
         if (!forceRefresh) {
-            const cachedSummary = await CacheManager.get(url, resolvedPromptId);
+            const cachedSummary = await CacheManager.get(
+                url,
+                resolvedPromptId,
+                settings.language,
+            );
             if (cachedSummary) {
                 console.log('Returning cached summary');
                 summary = cachedSummary;
@@ -415,23 +465,42 @@ async function handleSummarize(
                     : settings.openaiApiKey;
 
             if (!apiKey) {
+                const providerLabel = translate(
+                    settings.language,
+                    `providerLabel.${settings.apiProvider}`,
+                );
                 throw new Error(
-                    `Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`,
+                    translate(settings.language, 'configureApiKey', {
+                        providerLabel,
+                    }),
                 );
             }
 
             // Create API client
             if (settings.apiProvider === 'gemini') {
                 const api = new GeminiAPI(apiKey, settings.geminiModel);
-                summary = await api.summarize(content, resolvedPromptText);
+                summary = await api.summarize(
+                    content,
+                    resolvedPromptText,
+                    responseLanguageInstruction,
+                );
             } else {
                 const api = new OpenAIAPI(apiKey, settings.openaiModel);
-                summary = await api.summarize(content, resolvedPromptText);
+                summary = await api.summarize(
+                    content,
+                    resolvedPromptText,
+                    responseLanguageInstruction,
+                );
             }
 
             // Cache the summary
             if (summary) {
-                await CacheManager.set(url, summary, resolvedPromptId);
+                await CacheManager.set(
+                    url,
+                    summary,
+                    resolvedPromptId,
+                    settings.language,
+                );
             }
         }
 
@@ -445,7 +514,7 @@ async function handleSummarize(
         console.error('Summarization failed:', error);
         TabStateManager.updateState(tabId, {
             isLoading: false,
-            error: error.message || 'Failed to generate summary',
+            error: error.message || fallbackErrorMessage,
         });
         throw error;
     }
@@ -461,6 +530,10 @@ async function handleQuestion(
 
     // Get settings
     const settings = await StorageManager.getSettings();
+    const responseLanguageInstruction = translate(
+        settings.language,
+        'responseLanguageInstruction',
+    );
 
     // Validate API key
     const apiKey =
@@ -469,8 +542,14 @@ async function handleQuestion(
             : settings.openaiApiKey;
 
     if (!apiKey) {
+        const providerLabel = translate(
+            settings.language,
+            `providerLabel.${settings.apiProvider}`,
+        );
         throw new Error(
-            `Please configure your ${settings.apiProvider.toUpperCase()} API key in settings`,
+            translate(settings.language, 'configureApiKey', {
+                providerLabel,
+            }),
         );
     }
 
@@ -479,11 +558,23 @@ async function handleQuestion(
     if (settings.apiProvider === 'gemini') {
         const api = new GeminiAPI(apiKey, settings.geminiModel);
         const prompt = settings.customPrompts?.question;
-        answer = await api.answerQuestion(context, summary, question, prompt);
+        answer = await api.answerQuestion(
+            context,
+            summary,
+            question,
+            prompt,
+            responseLanguageInstruction,
+        );
     } else {
         const api = new OpenAIAPI(apiKey, settings.openaiModel);
         const prompt = settings.customPrompts?.question;
-        answer = await api.answerQuestion(context, summary, question, prompt);
+        answer = await api.answerQuestion(
+            context,
+            summary,
+            question,
+            prompt,
+            responseLanguageInstruction,
+        );
     }
 
     return { answer };
@@ -514,7 +605,8 @@ async function handleGetContent(
     }
 
     if (!tabId) {
-        throw new Error('No active tab found');
+        const settings = await StorageManager.getSettings();
+        throw new Error(translate(settings.language, 'noActiveTabFound'));
     }
 
     console.log('Executing script on tab:', tabId);
@@ -584,7 +676,8 @@ async function handleGetContent(
     });
 
     if (!results || results.length === 0 || !results[0].result) {
-        throw new Error('Failed to extract content from page');
+        const settings = await StorageManager.getSettings();
+        throw new Error(translate(settings.language, 'failedToExtractContent'));
     }
 
     return results[0].result;

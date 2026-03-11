@@ -1,0 +1,14 @@
+languageIds:
+    - javascript
+    - javascriptreact
+    - typescript
+    - typescriptreact
+
+usageMatchRegex:
+    - "(?:^|[^\\w\\d])t\\s*\\(\\s*['\"`]({key})['\"`]"
+    - "\\btranslate\\s*\\(\\s*[^,]+,\\s*['\"`]({key})['\"`]"
+
+refactorTemplates:
+    - "t('{key}')"
+    - "translate(language, '{key}')"
+    - '{key}'

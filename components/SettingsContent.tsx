@@ -9,21 +9,26 @@ import {
     DEFAULT_SETTINGS,
     type Settings,
     type ApiProvider,
+    type Language,
     type Theme,
     type CustomPrompt,
 } from '../utils/constants';
+import { useTranslate } from '../hooks/useTranslate';
 import './SettingsContent.css';
 
 interface SettingsContentProps {
     onThemeChange?: (theme: Theme) => void;
+    onLanguageChange?: (language: Language) => void;
 }
 
 export default function SettingsContent({
     onThemeChange,
+    onLanguageChange,
 }: SettingsContentProps) {
     const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
     const [saved, setSaved] = useState(false);
     const [cleared, setCleared] = useState(false);
+    const t = useTranslate(settings.language);
 
     useEffect(() => {
         loadSettings();
@@ -32,6 +37,10 @@ export default function SettingsContent({
     useEffect(() => {
         onThemeChange?.(settings.theme);
     }, [onThemeChange, settings.theme]);
+
+    useEffect(() => {
+        onLanguageChange?.(settings.language);
+    }, [onLanguageChange, settings.language]);
 
     const loadSettings = async () => {
         const loadedSettings = await StorageManager.getSettings();
@@ -65,7 +74,7 @@ export default function SettingsContent({
     const handleAddPrompt = () => {
         const newPrompt: CustomPrompt = {
             id: generateUniqueId(),
-            name: 'New Prompt',
+            name: t('newPrompt'),
             content: '{content}',
         };
         setSettings((prev) => ({
@@ -103,7 +112,37 @@ export default function SettingsContent({
     return (
         <div className="settings-form">
             <section className="settings-section">
-                <h2>Appearance</h2>
+                <h2>{t('language')}</h2>
+                <div className="provider-selection">
+                    {(['en-US', 'zh-TW'] as Language[]).map((language) => (
+                        <label
+                            key={language}
+                            className={`provider-option ${
+                                settings.language === language ? 'selected' : ''
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="language"
+                                value={language}
+                                checked={settings.language === language}
+                                onChange={(e) =>
+                                    setSettings({
+                                        ...settings,
+                                        language: e.target.value as Language,
+                                    })
+                                }
+                            />
+                            <span className="provider-name">
+                                {t(`languageLabel.${language}`)}
+                            </span>
+                        </label>
+                    ))}
+                </div>
+            </section>
+
+            <section className="settings-section">
+                <h2>{t('appearance')}</h2>
                 <div className="provider-selection">
                     <label
                         className={`provider-option ${
@@ -122,7 +161,7 @@ export default function SettingsContent({
                                 })
                             }
                         />
-                        <span className="provider-name">Warm (Orange)</span>
+                        <span className="provider-name">{t('warmTheme')}</span>
                     </label>
                     <label
                         className={`provider-option ${
@@ -141,7 +180,7 @@ export default function SettingsContent({
                                 })
                             }
                         />
-                        <span className="provider-name">Cool (Purple)</span>
+                        <span className="provider-name">{t('coolTheme')}</span>
                     </label>
                     <label
                         className={`provider-option ${
@@ -160,13 +199,13 @@ export default function SettingsContent({
                                 })
                             }
                         />
-                        <span className="provider-name">Light</span>
+                        <span className="provider-name">{t('lightTheme')}</span>
                     </label>
                 </div>
             </section>
 
             <section className="settings-section">
-                <h2>API Provider</h2>
+                <h2>{t('apiProvider')}</h2>
                 <div className="provider-selection">
                     <label
                         className={`provider-option ${
@@ -185,7 +224,9 @@ export default function SettingsContent({
                                 })
                             }
                         />
-                        <span className="provider-name">Google Gemini</span>
+                        <span className="provider-name">
+                            {t('providerLabel.gemini')}
+                        </span>
                     </label>
                     <label
                         className={`provider-option ${
@@ -204,16 +245,18 @@ export default function SettingsContent({
                                 })
                             }
                         />
-                        <span className="provider-name">OpenAI</span>
+                        <span className="provider-name">
+                            {t('providerLabel.openai')}
+                        </span>
                     </label>
                 </div>
             </section>
 
             {settings.apiProvider === 'gemini' && (
                 <section className="settings-section">
-                    <h2>Gemini Configuration</h2>
+                    <h2>{t('geminiConfiguration')}</h2>
                     <div className="form-group">
-                        <label htmlFor="gemini-api-key">API Key</label>
+                        <label htmlFor="gemini-api-key">{t('apiKey')}</label>
                         <input
                             id="gemini-api-key"
                             type="password"
@@ -224,11 +267,11 @@ export default function SettingsContent({
                                     geminiApiKey: e.target.value,
                                 })
                             }
-                            placeholder="Enter your Gemini API key"
+                            placeholder={t('enterGeminiApiKey')}
                             className="input-field"
                         />
                         <p className="help-text">
-                            Get your API key from{' '}
+                            {t('getApiKeyFrom')}{' '}
                             <a
                                 href="https://aistudio.google.com/apikey"
                                 target="_blank"
@@ -239,7 +282,7 @@ export default function SettingsContent({
                         </p>
                     </div>
                     <div className="form-group">
-                        <label htmlFor="gemini-model">Model</label>
+                        <label htmlFor="gemini-model">{t('model')}</label>
                         <select
                             id="gemini-model"
                             value={settings.geminiModel}
@@ -265,9 +308,9 @@ export default function SettingsContent({
 
             {settings.apiProvider === 'openai' && (
                 <section className="settings-section">
-                    <h2>OpenAI Configuration</h2>
+                    <h2>{t('openaiConfiguration')}</h2>
                     <div className="form-group">
-                        <label htmlFor="openai-api-key">API Key</label>
+                        <label htmlFor="openai-api-key">{t('apiKey')}</label>
                         <input
                             id="openai-api-key"
                             type="password"
@@ -278,11 +321,11 @@ export default function SettingsContent({
                                     openaiApiKey: e.target.value,
                                 })
                             }
-                            placeholder="Enter your OpenAI API key"
+                            placeholder={t('enterOpenaiApiKey')}
                             className="input-field"
                         />
                         <p className="help-text">
-                            Get your API key from{' '}
+                            {t('getApiKeyFrom')}{' '}
                             <a
                                 href="https://platform.openai.com/api-keys"
                                 target="_blank"
@@ -293,7 +336,7 @@ export default function SettingsContent({
                         </p>
                     </div>
                     <div className="form-group">
-                        <label htmlFor="openai-model">Model</label>
+                        <label htmlFor="openai-model">{t('model')}</label>
                         <select
                             id="openai-model"
                             value={settings.openaiModel}
@@ -319,9 +362,9 @@ export default function SettingsContent({
 
             <section className="settings-section">
                 <div className="section-header">
-                    <h2>Prompt Manager</h2>
+                    <h2>{t('promptManager')}</h2>
                     <button onClick={handleResetPrompts} className="reset-btn">
-                        Reset Defaults
+                        {t('resetDefaults')}
                     </button>
                 </div>
 
@@ -331,7 +374,7 @@ export default function SettingsContent({
                             <div className="prompt-item-header">
                                 <div className="prompt-item-controls">
                                     <label
-                                        title="Set as Default"
+                                        title={t('setAsDefault')}
                                         className="default-prompt-label"
                                     >
                                         <input
@@ -370,7 +413,7 @@ export default function SettingsContent({
                                         settings.defaultPromptId === prompt.id
                                     }
                                 >
-                                    Delete
+                                    {t('delete')}
                                 </button>
                             </div>
                             <textarea
@@ -382,7 +425,7 @@ export default function SettingsContent({
                                 }
                                 rows={3}
                                 className="textarea-field prompt-content-textarea"
-                                placeholder="Enter prompt content..."
+                                placeholder={t('enterPromptContent')}
                             />
                         </div>
                     ))}
@@ -390,13 +433,13 @@ export default function SettingsContent({
                         onClick={handleAddPrompt}
                         className="save-btn add-prompt-btn"
                     >
-                        + Add New Prompt
+                        {t('addNewPrompt')}
                     </button>
                 </div>
 
                 <div className="form-group question-prompt-section">
                     <label htmlFor="question-prompt">
-                        Question Answering Prompt
+                        {t('questionAnsweringPrompt')}
                     </label>
                     <textarea
                         id="question-prompt"
@@ -412,29 +455,23 @@ export default function SettingsContent({
                         }
                         rows={6}
                         className="textarea-field"
-                        placeholder="Enter custom Q&A prompt. Use {context}, {summary}, and {question} as placeholders."
+                        placeholder={t('questionPromptPlaceholder')}
                     />
-                    <p className="help-text">
-                        Use {'{context}'}, {'{summary}'}, and {'{question}'} as
-                        placeholders.
-                    </p>
+                    <p className="help-text">{t('questionPromptHelp')}</p>
                 </div>
             </section>
 
             <section className="settings-section">
-                <h2>Cache Management</h2>
-                <p className="section-description">
-                    Clear cached summaries to free up storage or force
-                    regeneration.
-                </p>
+                <h2>{t('cacheManagement')}</h2>
+                <p className="section-description">{t('cacheDescription')}</p>
                 <button onClick={handleClearCache} className="danger-btn">
-                    {cleared ? '✓ Cache Cleared!' : 'Clear Cache'}
+                    {cleared ? t('cacheCleared') : t('clearCache')}
                 </button>
             </section>
 
             <div className="save-container">
                 <button onClick={handleSave} className="save-btn">
-                    {saved ? '✓ Settings Saved!' : 'Save Settings'}
+                    {saved ? t('settingsSaved') : t('saveSettings')}
                 </button>
             </div>
         </div>

@@ -26,6 +26,17 @@ export class OpenAIAPI {
         this.model = model;
     }
 
+    private withLanguageInstruction(
+        content: string,
+        responseLanguageInstruction?: string,
+    ): string {
+        if (!responseLanguageInstruction) {
+            return content;
+        }
+
+        return `${content}\n\n${responseLanguageInstruction}`;
+    }
+
     /**
      * Generate content using OpenAI API
      */
@@ -69,7 +80,11 @@ export class OpenAIAPI {
      * 3. Summarize each chunk
      * 4. Create final summary from all chunk summaries
      */
-    async summarize(content: string, customPrompt?: string): Promise<string> {
+    async summarize(
+        content: string,
+        customPrompt?: string,
+        responseLanguageInstruction?: string,
+    ): Promise<string> {
         const modelConfig =
             MODELS.OPENAI[this.model as keyof typeof MODELS.OPENAI];
         // Default to conservative 5000 if config not found (shouldn't happen)
@@ -87,8 +102,10 @@ export class OpenAIAPI {
             return await this.generateContent([
                 {
                     role: 'system',
-                    content:
+                    content: this.withLanguageInstruction(
                         'You are a helpful assistant that provides clear and concise summaries.',
+                        responseLanguageInstruction,
+                    ),
                 },
                 { role: 'user', content: userMessage },
             ]);
@@ -96,7 +113,7 @@ export class OpenAIAPI {
 
         // Multi-chunk processing with progress reporting
         console.log(
-            `📚 Content is long, splitting into ${chunks.length} chunks for processing...`
+            `📚 Content is long, splitting into ${chunks.length} chunks for processing...`,
         );
         const chunkSummaries: string[] = [];
 
@@ -106,8 +123,10 @@ export class OpenAIAPI {
             const summary = await this.generateContent([
                 {
                     role: 'system',
-                    content:
+                    content: this.withLanguageInstruction(
                         'You are a helpful assistant that summarizes content.',
+                        responseLanguageInstruction,
+                    ),
                 },
                 {
                     role: 'user',
@@ -128,13 +147,13 @@ export class OpenAIAPI {
 
         // Final synthesis - combine all chunk summaries into one comprehensive summary
         console.log(
-            `🔄 Creating final comprehensive summary from ${chunkSummaries.length} parts...`
+            `🔄 Creating final comprehensive summary from ${chunkSummaries.length} parts...`,
         );
 
         const combinedContent = customPrompt
             ? customPrompt.replace(
                   '{content}',
-                  chunkSummaries.join('\n\n---\n\n')
+                  chunkSummaries.join('\n\n---\n\n'),
               )
             : chunkSummaries
                   .map((summary, idx) => `Part ${idx + 1}:\n${summary}`)
@@ -147,8 +166,10 @@ export class OpenAIAPI {
         const finalSummary = await this.generateContent([
             {
                 role: 'system',
-                content:
+                content: this.withLanguageInstruction(
                     'You are a helpful assistant that synthesizes information.',
+                    responseLanguageInstruction,
+                ),
             },
             { role: 'user', content: finalPrompt },
         ]);
@@ -164,7 +185,8 @@ export class OpenAIAPI {
         context: string,
         summary: string,
         question: string,
-        customPrompt?: string
+        customPrompt?: string,
+        responseLanguageInstruction?: string,
     ): Promise<string> {
         const userMessage = customPrompt
             ? customPrompt
@@ -184,8 +206,10 @@ Question: ${question}`;
         return await this.generateContent([
             {
                 role: 'system',
-                content:
+                content: this.withLanguageInstruction(
                     'You are a helpful assistant that answers questions based on provided context.',
+                    responseLanguageInstruction,
+                ),
             },
             { role: 'user', content: userMessage },
         ]);

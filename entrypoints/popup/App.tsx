@@ -5,7 +5,9 @@ import {
     type Theme,
     type Settings,
     DEFAULT_SETTINGS,
+    STORAGE_KEYS,
 } from '../../utils/constants';
+import { useTranslate } from '../../hooks/useTranslate';
 import SplitButton from '../../components/SplitButton';
 import icon from '../../assets/icon.png';
 import '../../assets/theme.css';
@@ -28,11 +30,19 @@ function App() {
     const [theme, setTheme] = useState<Theme>('warm');
     const [showFloatingBall, setShowFloatingBall] = useState(true);
     const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+    const t = useTranslate(settings.language);
 
     // Get current page content and settings on mount
     useEffect(() => {
         loadSettings();
         initializeState();
+
+        const handleStorageChange = (changes: Record<string, unknown>) => {
+            const settingKeys = Object.values(STORAGE_KEYS);
+            if (Object.keys(changes).some((key) => settingKeys.includes(key))) {
+                loadSettings();
+            }
+        };
 
         // Listen for state updates from background
         const messageListener = (message: any) => {
@@ -65,10 +75,14 @@ function App() {
             }
         };
 
+        browser.storage.onChanged.addListener(handleStorageChange as any);
         browser.runtime.onMessage.addListener(messageListener);
         window.addEventListener('visibilitychange', visibilityChangeListener);
 
         return () => {
+            browser.storage.onChanged.removeListener(
+                handleStorageChange as any,
+            );
             browser.runtime.onMessage.removeListener(messageListener);
             window.removeEventListener(
                 'visibilitychange',
@@ -135,7 +149,7 @@ function App() {
             }
         } catch (err: any) {
             console.error('Failed to load page content:', err);
-            setError(err.message || 'Failed to load page content');
+            setError(err.message || t('failedToLoadPageContent'));
         }
     };
 
@@ -145,7 +159,7 @@ function App() {
         promptId?: string,
     ) => {
         if (!pageContent) {
-            setError('No page content available');
+            setError(t('noPageContentAvailable'));
             return;
         }
 
@@ -178,7 +192,7 @@ function App() {
             }
         } catch (err: any) {
             console.error('Summarization error:', err);
-            setError(err.message || 'Failed to generate summary');
+            setError(err.message || t('failedToGenerateSummary'));
             setLoading(false);
         }
     };
@@ -213,7 +227,7 @@ function App() {
             }
         } catch (err: any) {
             console.error('Question error:', err);
-            setError(err.message || 'Failed to get answer');
+            setError(err.message || t('failedToGetAnswer'));
         } finally {
             setLoading(false);
         }
@@ -278,8 +292,8 @@ function App() {
                         onClick={toggleFloatingBall}
                         title={
                             showFloatingBall
-                                ? 'Hide Floating Ball'
-                                : 'Show Floating Ball'
+                                ? t('hideFloatingBall')
+                                : t('showFloatingBall')
                         }
                         style={{ opacity: showFloatingBall ? 1 : 0.5 }}
                     >
@@ -288,7 +302,7 @@ function App() {
                     <button
                         className="settings-btn"
                         onClick={openSettings}
-                        title="Settings"
+                        title={t('openSettings')}
                     >
                         ⚙️
                     </button>
@@ -312,10 +326,10 @@ function App() {
                     <SplitButton
                         variant="primary"
                         icon="✨"
-                        text="Summarize"
+                        text={t('summarize')}
                         disabled={!pageContent}
                         loading={loading}
-                        loadingText="Summarizing..."
+                        loadingText={t('summarizing')}
                         settings={settings}
                         onAction={(promptText, promptId) =>
                             handleSummarize(false, promptText, promptId)
@@ -327,7 +341,7 @@ function App() {
                 {summary && (
                     <>
                         <div className="summary">
-                            <h3>Summary</h3>
+                            <h3>{t('summary')}</h3>
                             <div className="summary-content-wrapper">
                                 <div className="summary-content markdown-content">
                                     <ReactMarkdown>{summary}</ReactMarkdown>
@@ -342,9 +356,9 @@ function App() {
                                 <SplitButton
                                     variant="secondary"
                                     icon="🔄"
-                                    text="Re-summarize"
+                                    text={t('reSummarize')}
                                     loading={loading}
-                                    loadingText="Re-summarizing..."
+                                    loadingText={t('reSummarizing')}
                                     settings={settings}
                                     onAction={(promptText, promptId) =>
                                         handleSummarize(
@@ -362,13 +376,13 @@ function App() {
                                     className="primary-btn"
                                     style={{ width: '100%' }}
                                 >
-                                    📄 Open in Full Page
+                                    📄 {t('openInFullPage')}
                                 </button>
                             </div>
                         </div>
 
                         <div className="chat">
-                            <h3>Ask Questions</h3>
+                            <h3>{t('askQuestions')}</h3>
                             {messages.length > 0 && (
                                 <div className="messages">
                                     {messages.map((msg, idx) => (
@@ -394,7 +408,9 @@ function App() {
                                         setQuestion(e.target.value)
                                     }
                                     onKeyPress={handleKeyPress}
-                                    placeholder="Ask a question about this page..."
+                                    placeholder={t(
+                                        'askQuestionPagePlaceholder',
+                                    )}
                                     disabled={loading}
                                     className="question-input"
                                 />

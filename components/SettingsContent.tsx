@@ -1,58 +1,29 @@
-import { useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useState } from 'react';
 import { RiDeleteBin5Line } from 'react-icons/ri';
-import { StorageManager } from '../utils/storage';
 import { CacheManager } from '../utils/cache';
 import { generateUniqueId } from '../utils/id';
 import {
     MODELS,
     DEFAULT_PROMPTS,
     PRESET_PROMPTS,
-    DEFAULT_SETTINGS,
     type Settings,
     type ApiProvider,
-    type Language,
-    type Theme,
     type CustomPrompt,
 } from '../utils/constants';
 import { useTranslate } from '../hooks/useTranslate';
 import './SettingsContent.css';
 
 interface SettingsContentProps {
-    onThemeChange?: (theme: Theme) => void;
-    onLanguageChange?: (language: Language) => void;
+    settings: Settings;
+    setSettings: Dispatch<SetStateAction<Settings>>;
 }
 
 export default function SettingsContent({
-    onThemeChange,
-    onLanguageChange,
+    settings,
+    setSettings,
 }: SettingsContentProps) {
-    const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-    const [saved, setSaved] = useState(false);
     const [cleared, setCleared] = useState(false);
     const t = useTranslate(settings.language);
-
-    useEffect(() => {
-        loadSettings();
-    }, []);
-
-    useEffect(() => {
-        onThemeChange?.(settings.theme);
-    }, [onThemeChange, settings.theme]);
-
-    useEffect(() => {
-        onLanguageChange?.(settings.language);
-    }, [onLanguageChange, settings.language]);
-
-    const loadSettings = async () => {
-        const loadedSettings = await StorageManager.getSettings();
-        setSettings(loadedSettings);
-    };
-
-    const handleSave = async () => {
-        await StorageManager.saveSettings(settings);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
-    };
 
     const handleClearCache = async () => {
         await CacheManager.clear();
@@ -115,30 +86,35 @@ export default function SettingsContent({
             <section className="settings-section">
                 <h2>{t('language')}</h2>
                 <div className="provider-selection">
-                    {(['en-US', 'zh-TW'] as Language[]).map((language) => (
-                        <label
-                            key={language}
-                            className={`provider-option ${
-                                settings.language === language ? 'selected' : ''
-                            }`}
-                        >
-                            <input
-                                type="radio"
-                                name="language"
-                                value={language}
-                                checked={settings.language === language}
-                                onChange={(e) =>
-                                    setSettings({
-                                        ...settings,
-                                        language: e.target.value as Language,
-                                    })
-                                }
-                            />
-                            <span className="provider-name">
-                                {t(`languageLabel.${language}`)}
-                            </span>
-                        </label>
-                    ))}
+                    {(['en-US', 'zh-TW'] as Settings['language'][]).map(
+                        (language) => (
+                            <label
+                                key={language}
+                                className={`provider-option ${
+                                    settings.language === language
+                                        ? 'selected'
+                                        : ''
+                                }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="language"
+                                    value={language}
+                                    checked={settings.language === language}
+                                    onChange={(e) =>
+                                        setSettings({
+                                            ...settings,
+                                            language: e.target
+                                                .value as Settings['language'],
+                                        })
+                                    }
+                                />
+                                <span className="provider-name">
+                                    {t(`languageLabel.${language}`)}
+                                </span>
+                            </label>
+                        ),
+                    )}
                 </div>
             </section>
 
@@ -158,7 +134,7 @@ export default function SettingsContent({
                             onChange={(e) =>
                                 setSettings({
                                     ...settings,
-                                    theme: e.target.value as Theme,
+                                    theme: e.target.value as Settings['theme'],
                                 })
                             }
                         />
@@ -177,7 +153,7 @@ export default function SettingsContent({
                             onChange={(e) =>
                                 setSettings({
                                     ...settings,
-                                    theme: e.target.value as Theme,
+                                    theme: e.target.value as Settings['theme'],
                                 })
                             }
                         />
@@ -196,7 +172,7 @@ export default function SettingsContent({
                             onChange={(e) =>
                                 setSettings({
                                     ...settings,
-                                    theme: e.target.value as Theme,
+                                    theme: e.target.value as Settings['theme'],
                                 })
                             }
                         />
@@ -471,12 +447,6 @@ export default function SettingsContent({
                     {cleared ? t('cacheCleared') : t('clearCache')}
                 </button>
             </section>
-
-            <div className="save-container">
-                <button onClick={handleSave} className="save-btn">
-                    {saved ? t('settingsSaved') : t('saveSettings')}
-                </button>
-            </div>
         </div>
     );
 }

@@ -158,12 +158,6 @@
     cursor: not-allowed;
 }
 
-.settings-form .save-container {
-    margin-top: 8px;
-    display: flex;
-    justify-content: center;
-}
-
 .settings-form .save-btn {
     background: var(--primary-gradient);
     color: white;

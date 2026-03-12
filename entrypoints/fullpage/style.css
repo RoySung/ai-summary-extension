@@ -252,22 +252,6 @@ body {
     color: rgba(255, 255, 255, 0.4);
 }
 
-.send-btn {
-    padding: 1rem 1.75rem;
-    background: var(--primary-gradient);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.25rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    min-width: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .send-btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px var(--primary-shadow);

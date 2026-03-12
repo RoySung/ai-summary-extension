@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { RiDeleteBin5Line } from 'react-icons/ri';
 import { StorageManager } from '../utils/storage';
 import { CacheManager } from '../utils/cache';
 import { generateUniqueId } from '../utils/id';
@@ -408,12 +409,14 @@ export default function SettingsContent({
                                         handleDeletePrompt(prompt.id)
                                     }
                                     className="danger-btn danger-btn-small"
+                                    title={t('delete')}
+                                    aria-label={t('delete')}
                                     disabled={
                                         prompt.id === 'default' ||
                                         settings.defaultPromptId === prompt.id
                                     }
                                 >
-                                    {t('delete')}
+                                    <RiDeleteBin5Line aria-hidden="true" />
                                 </button>
                             </div>
                             <textarea

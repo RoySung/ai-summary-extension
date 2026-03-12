@@ -235,8 +235,12 @@
 }
 
 .settings-form .danger-btn-small {
-    padding: 8px 12px;
-    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    padding: 8px;
+    font-size: 16px;
     white-space: nowrap;
 }
 

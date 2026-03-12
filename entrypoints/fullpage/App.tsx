@@ -14,6 +14,7 @@ import icon from '../../assets/icon.png';
 import '../../assets/theme.css';
 import '../../assets/common.css';
 import './style.css';
+import { RiRefreshLine, RiSendPlane2Fill } from 'react-icons/ri';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -316,7 +317,7 @@ export default function FullPage() {
                                 <SplitButton
                                     className="resummarize-btn"
                                     variant="secondary"
-                                    icon="🔄"
+                                    icon={<RiRefreshLine aria-hidden="true" />}
                                     text={t('reSummarize')}
                                     loading={loading}
                                     loadingText={t('reSummarizing')}
@@ -373,7 +374,11 @@ export default function FullPage() {
                                     disabled={loading || !question.trim()}
                                     className="send-btn"
                                 >
-                                    {loading ? '...' : '➤'}
+                                    {loading ? (
+                                        '...'
+                                    ) : (
+                                        <RiSendPlane2Fill aria-hidden="true" />
+                                    )}
                                 </button>
                             </div>
                         </div>

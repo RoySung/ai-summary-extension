@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import {
+    RiArticleLine,
+    RiErrorWarningFill,
+    RiEyeFill,
+    RiEyeOffFill,
+    RiFileTextLine,
+    RiRefreshLine,
+    RiSendPlane2Fill,
+    RiSettings3Fill,
+} from 'react-icons/ri';
 import { StorageManager } from '../../utils/storage';
 import {
     type Theme,
@@ -295,16 +305,26 @@ function App() {
                                 ? t('hideFloatingBall')
                                 : t('showFloatingBall')
                         }
+                        aria-label={
+                            showFloatingBall
+                                ? t('hideFloatingBall')
+                                : t('showFloatingBall')
+                        }
                         style={{ opacity: showFloatingBall ? 1 : 0.5 }}
                     >
-                        🔵
+                        {showFloatingBall ? (
+                            <RiEyeFill aria-hidden="true" />
+                        ) : (
+                            <RiEyeOffFill aria-hidden="true" />
+                        )}
                     </button>
                     <button
                         className="settings-btn"
                         onClick={openSettings}
                         title={t('openSettings')}
+                        aria-label={t('openSettings')}
                     >
-                        ⚙️
+                        <RiSettings3Fill aria-hidden="true" />
                     </button>
                 </div>
             </header>
@@ -318,14 +338,23 @@ function App() {
 
                 {error && (
                     <div className="error">
-                        <p>⚠️ {error}</p>
+                        <p
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                            }}
+                        >
+                            <RiErrorWarningFill aria-hidden="true" />
+                            <span>{error}</span>
+                        </p>
                     </div>
                 )}
 
                 {!summary && (
                     <SplitButton
                         variant="primary"
-                        icon="✨"
+                        icon={<RiArticleLine aria-hidden="true" />}
                         text={t('summarize')}
                         disabled={!pageContent}
                         loading={loading}
@@ -355,7 +384,7 @@ function App() {
                                 {/* Re-summarize Split Button */}
                                 <SplitButton
                                     variant="secondary"
-                                    icon="🔄"
+                                    icon={<RiRefreshLine aria-hidden="true" />}
                                     text={t('reSummarize')}
                                     loading={loading}
                                     loadingText={t('reSummarizing')}
@@ -374,9 +403,16 @@ function App() {
                                     onClick={openInFullPage}
                                     disabled={loading}
                                     className="primary-btn"
-                                    style={{ width: '100%' }}
+                                    style={{
+                                        width: '100%',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                    }}
                                 >
-                                    📄 {t('openInFullPage')}
+                                    <RiFileTextLine aria-hidden="true" />
+                                    <span>{t('openInFullPage')}</span>
                                 </button>
                             </div>
                         </div>
@@ -418,8 +454,13 @@ function App() {
                                     onClick={handleAskQuestion}
                                     disabled={loading || !question.trim()}
                                     className="send-btn"
+                                    aria-label={t('askQuestions')}
                                 >
-                                    {loading ? '...' : '➤'}
+                                    {loading ? (
+                                        '...'
+                                    ) : (
+                                        <RiSendPlane2Fill aria-hidden="true" />
+                                    )}
                                 </button>
                             </div>
                         </div>

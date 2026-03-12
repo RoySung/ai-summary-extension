@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { type Settings } from '../utils/constants';
 import styles from './SplitButton.module.css';
 
 interface SplitButtonProps {
     className?: string;
     variant: 'primary' | 'secondary';
-    icon: string;
+    icon: ReactNode;
     text: string;
     disabled?: boolean;
     loading?: boolean;
@@ -94,8 +94,11 @@ export default function SplitButton({
                         <span>{loadingText}</span>
                     ) : (
                         <>
-                            <span>
-                                {icon} {text}
+                            <span className={styles.buttonLabel}>
+                                <span className={styles.buttonIcon}>
+                                    {icon}
+                                </span>
+                                <span>{text}</span>
                             </span>
                             {defaultPromptName && (
                                 <span className={styles.promptName}>

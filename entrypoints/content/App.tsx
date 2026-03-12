@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import {
+    RiArticleLine,
+    RiErrorWarningFill,
+    RiEyeOffFill,
+    RiFileTextLine,
+    RiRefreshLine,
+    RiSendPlane2Fill,
+    RiSettings3Fill,
+    RiSubtractLine,
+} from 'react-icons/ri';
 import { extractPageContent } from '../../utils/page';
 import { StorageManager } from '../../utils/storage';
 import {
@@ -443,47 +453,25 @@ export default function App() {
                             onClick={openSettings}
                             title={t('openSettings')}
                             style={{ fontSize: '16px' }}
+                            aria-label={t('openSettings')}
                         >
-                            ⚙️
+                            <RiSettings3Fill aria-hidden="true" />
                         </button>
                         <button
                             className="ai-summary-icon-btn"
                             onClick={handleHideFloatingBall}
                             title={t('hideFloatingBall')}
+                            aria-label={t('hideFloatingBall')}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
+                            <RiEyeOffFill aria-hidden="true" />
                         </button>
                         <button
                             className="ai-summary-icon-btn"
                             onClick={toggleExpand}
                             title={t('minimize')}
+                            aria-label={t('minimize')}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
+                            <RiSubtractLine aria-hidden="true" />
                         </button>
                     </div>
                 </div>
@@ -507,7 +495,16 @@ export default function App() {
 
                     {error && (
                         <div className="error">
-                            <p>⚠️ {error}</p>
+                            <p
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                }}
+                            >
+                                <RiErrorWarningFill aria-hidden="true" />
+                                <span>{error}</span>
+                            </p>
                         </div>
                     )}
 
@@ -515,7 +512,7 @@ export default function App() {
                         <div style={{ margin: '20px 0' }}>
                             <SplitButton
                                 variant="primary"
-                                icon="✨"
+                                icon={<RiArticleLine aria-hidden="true" />}
                                 text={t('summarize')}
                                 disabled={!pageContent}
                                 loading={loading}
@@ -550,7 +547,9 @@ export default function App() {
                                 >
                                     <SplitButton
                                         variant="secondary"
-                                        icon="🔄"
+                                        icon={
+                                            <RiRefreshLine aria-hidden="true" />
+                                        }
                                         text={t('reSummarize')}
                                         loading={loading}
                                         loadingText={t('reSummarizing')}
@@ -568,9 +567,16 @@ export default function App() {
                                         onClick={openInFullPage}
                                         disabled={loading}
                                         className="primary-btn"
-                                        style={{ width: '100%' }}
+                                        style={{
+                                            width: '100%',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px',
+                                        }}
                                     >
-                                        📄 {t('fullPage')}
+                                        <RiFileTextLine aria-hidden="true" />
+                                        <span>{t('fullPage')}</span>
                                     </button>
                                 </div>
                             </div>
@@ -612,8 +618,13 @@ export default function App() {
                                         onClick={handleAskQuestion}
                                         disabled={loading || !question.trim()}
                                         className="send-btn"
+                                        aria-label={t('askQuestions')}
                                     >
-                                        {loading ? '...' : '➤'}
+                                        {loading ? (
+                                            '...'
+                                        ) : (
+                                            <RiSendPlane2Fill aria-hidden="true" />
+                                        )}
                                     </button>
                                 </div>
                             </div>

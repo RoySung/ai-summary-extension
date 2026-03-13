@@ -68,7 +68,9 @@ export default function AboutMeContent({ language }: AboutMeContentProps) {
                             <span className="about-me-link-description">
                                 {t(link.descriptionKey)}
                             </span>
-                            <span className="about-me-link-url">{link.url}</span>
+                            <span className="about-me-link-url">
+                                {link.url}
+                            </span>
                         </a>
                     ))}
                 </div>

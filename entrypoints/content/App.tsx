@@ -19,6 +19,7 @@ import {
     STORAGE_KEYS,
 } from '../../utils/constants';
 import { useTranslate } from '../../hooks/useTranslate';
+import { useWindowSizeStorage } from '../../hooks/useWindowSizeStorage';
 import SplitButton from '../../components/SplitButton';
 import icon from '../../assets/icon.png';
 import '../../assets/theme.css';
@@ -42,7 +43,7 @@ export default function App() {
     const [pageContent, setPageContent] = useState<any>(null);
     const [theme, setTheme] = useState<Theme>('warm');
     const [showFloatingBall, setShowFloatingBall] = useState(true);
-    const [windowSize, setWindowSize] = useState({ width: 380, height: 500 });
+    const { windowSize, setWindowSize } = useWindowSizeStorage();
     const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
     const t = useTranslate(settings.language);
 
@@ -263,8 +264,8 @@ export default function App() {
             const deltaY = startY - moveEvent.clientY; // Moving up increases height
 
             setWindowSize({
-                width: Math.max(300, Math.min(800, startWidth + deltaX)),
-                height: Math.max(300, Math.min(800, startHeight + deltaY)),
+                width: startWidth + deltaX,
+                height: startHeight + deltaY,
             });
         };
 

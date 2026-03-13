@@ -49,7 +49,7 @@
 
 /* Floating Window */
 .ai-summary-window {
-    width: 380px;
+    width: 520px;
     height: 500px;
     background: var(--bg-gradient);
     border-radius: 16px;

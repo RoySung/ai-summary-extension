@@ -481,6 +481,7 @@ async function handleSummarize(
                 const api = new GeminiAPI(apiKey, settings.geminiModel);
                 summary = await api.summarize(
                     content,
+                    url,
                     resolvedPromptText,
                     responseLanguageInstruction,
                 );
@@ -488,6 +489,7 @@ async function handleSummarize(
                 const api = new OpenAIAPI(apiKey, settings.openaiModel);
                 summary = await api.summarize(
                     content,
+                    url,
                     resolvedPromptText,
                     responseLanguageInstruction,
                 );

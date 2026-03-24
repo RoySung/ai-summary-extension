@@ -1,6 +1,8 @@
 import { OPENAI_API_ENDPOINT, MODELS } from '../utils/constants';
 import { splitIntoChunks } from '../utils/chunking';
 
+type PromptVariables = Record<string, string | undefined>;
+
 export interface OpenAIMessage {
     role: 'system' | 'user' | 'assistant';
     content: string;
@@ -35,6 +37,17 @@ export class OpenAIAPI {
         }
 
         return `${content}\n\n${responseLanguageInstruction}`;
+    }
+
+    private applyPromptVariables(
+        prompt: string,
+        variables: PromptVariables,
+    ): string {
+        return Object.entries(variables).reduce(
+            (result, [key, value]) =>
+                result.replaceAll(`{${key}}`, value ?? ''),
+            prompt,
+        );
     }
 
     /**
@@ -82,6 +95,7 @@ export class OpenAIAPI {
      */
     async summarize(
         content: string,
+        url?: string,
         customPrompt?: string,
         responseLanguageInstruction?: string,
     ): Promise<string> {
@@ -96,7 +110,10 @@ export class OpenAIAPI {
         // Single chunk - direct summarization
         if (chunks.length === 1) {
             const userMessage = customPrompt
-                ? customPrompt.replace('{content}', content)
+                ? this.applyPromptVariables(customPrompt, {
+                      content,
+                      url,
+                  })
                 : `Please provide a concise and comprehensive summary of the following content:\n\n${content}`;
 
             return await this.generateContent([
@@ -151,10 +168,10 @@ export class OpenAIAPI {
         );
 
         const combinedContent = customPrompt
-            ? customPrompt.replace(
-                  '{content}',
-                  chunkSummaries.join('\n\n---\n\n'),
-              )
+        ? this.applyPromptVariables(customPrompt, {
+            content: chunkSummaries.join('\n\n---\n\n'),
+            url,
+          })
             : chunkSummaries
                   .map((summary, idx) => `Part ${idx + 1}:\n${summary}`)
                   .join('\n\n---\n\n');

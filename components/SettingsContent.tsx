@@ -344,6 +344,9 @@ export default function SettingsContent({
                         {t('resetDefaults')}
                     </button>
                 </div>
+                <p className="section-description">
+                    {t('promptManagerDescription')}
+                </p>
 
                 <div className="prompt-list">
                     {settings.savedPrompts?.map((prompt) => (

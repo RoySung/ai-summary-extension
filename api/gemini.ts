@@ -2,6 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 import { MODELS } from '../utils/constants';
 import { splitIntoChunks } from '../utils/chunking';
 
+type PromptVariables = Record<string, string | undefined>;
+
 /**
  * Gemini API client
  */
@@ -23,6 +25,17 @@ export class GeminiAPI {
         }
 
         return `${prompt}\n\n${responseLanguageInstruction}`;
+    }
+
+    private applyPromptVariables(
+        prompt: string,
+        variables: PromptVariables,
+    ): string {
+        return Object.entries(variables).reduce(
+            (result, [key, value]) =>
+                result.replaceAll(`{${key}}`, value ?? ''),
+            prompt,
+        );
     }
 
     /**
@@ -92,6 +105,7 @@ export class GeminiAPI {
      */
     async summarize(
         content: string,
+        url?: string,
         customPrompt?: string,
         responseLanguageInstruction?: string,
     ): Promise<string> {
@@ -106,7 +120,10 @@ export class GeminiAPI {
         // Single chunk - direct summarization
         if (chunks.length === 1) {
             const prompt = customPrompt
-                ? customPrompt.replace('{content}', content)
+                ? this.applyPromptVariables(customPrompt, {
+                      content,
+                      url,
+                  })
                 : `Please provide a concise and comprehensive summary of the following content:\n\n${content}`;
 
             return await this.generateContent(
@@ -154,10 +171,10 @@ Focus on key points, important details, and main ideas. Keep the summary concise
         );
 
         const finalPrompt = customPrompt
-            ? customPrompt.replace(
-                  '{content}',
-                  chunkSummaries.join('\n\n---\n\n'),
-              )
+            ? this.applyPromptVariables(customPrompt, {
+                  content: chunkSummaries.join('\n\n---\n\n'),
+                  url,
+              })
             : `I have summaries of different parts of a document. Please synthesize these into one coherent, comprehensive summary that covers all main points:
 
 ${chunkSummaries

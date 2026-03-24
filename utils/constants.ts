@@ -45,6 +45,8 @@ export const MODELS = {
 export const DEFAULT_PROMPTS = {
     SUMMARIZE: `Please provide a concise and comprehensive summary of the following content. Focus on the main points, key arguments, and important details. Structure the summary in a clear and readable format.
 
+Page URL: {url}
+
 Content:
 {content}`,
 
@@ -94,6 +96,8 @@ export const PRESET_PROMPTS: CustomPrompt[] = [
         name: 'Bullet Points',
         content: `Summarize the following content using a bulleted list. Capture the main ideas and key details.
 
+Page URL: {url}
+
 Content:
 {content}`,
     },
@@ -101,6 +105,8 @@ Content:
         id: 'deep-dive',
         name: 'Deep Dive',
         content: `Provide a detailed and comprehensive analysis of the following content. Include all significant details and nuances.
+
+Page URL: {url}
 
 Content:
 {content}`,
@@ -110,6 +116,8 @@ Content:
         name: 'ELI5 (Simple)',
         content: `Explain the following content effectively to a 5-year-old. Use simple language and analogies.
 
+Page URL: {url}
+
 Content:
 {content}`,
     },
@@ -117,6 +125,8 @@ Content:
         id: 'action-items',
         name: 'Action Items',
         content: `Identify and list any action items, recommendations, or key takeaways from the following content.
+
+Page URL: {url}
 
 Content:
 {content}`,

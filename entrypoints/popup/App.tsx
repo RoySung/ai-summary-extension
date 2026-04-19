@@ -313,9 +313,9 @@ function App() {
                         style={{ opacity: showFloatingBall ? 1 : 0.5 }}
                     >
                         {showFloatingBall ? (
-                            <RiEyeFill aria-hidden="true" />
-                        ) : (
                             <RiEyeOffFill aria-hidden="true" />
+                        ) : (
+                            <RiEyeFill aria-hidden="true" />
                         )}
                     </button>
                     <button

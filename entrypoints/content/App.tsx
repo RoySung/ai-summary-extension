@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import {
     RiArticleLine,
     RiErrorWarningFill,
+    RiEyeFill,
     RiEyeOffFill,
     RiFileTextLine,
     RiRefreshLine,
@@ -35,6 +36,24 @@ export default function App() {
     const version = browser.runtime.getManifest().version;
     const windowRef = useRef<HTMLDivElement>(null);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [floatPosition, setFloatPosition] = useState<{
+        x: number;
+        y: number;
+    } | null>(() => {
+        try {
+            const saved = localStorage.getItem('askweb:float-position');
+            return saved ? JSON.parse(saved) : null;
+        } catch {
+            return null;
+        }
+    });
+    const hasDraggedRef = useRef(false);
+    const dragStartRef = useRef<{
+        mouseX: number;
+        mouseY: number;
+        posX: number;
+        posY: number;
+    } | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [summary, setSummary] = useState<string | null>(null);
@@ -252,6 +271,67 @@ export default function App() {
         setShowFloatingBall(false);
     };
 
+    const handleCloseFloatingBall = async () => {
+        await StorageManager.saveSettings({ showFloatingBall: false });
+        setShowFloatingBall(false);
+    };
+
+    const handleFloatDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+        if ((e.target as HTMLElement).closest('.ai-summary-float-close'))
+            return;
+        e.preventDefault();
+        hasDraggedRef.current = false;
+        const ballSize = 62;
+        const currentPos = floatPosition || {
+            x: window.innerWidth - ballSize - 20,
+            y: window.innerHeight - ballSize - 20,
+        };
+        dragStartRef.current = {
+            mouseX: e.clientX,
+            mouseY: e.clientY,
+            posX: currentPos.x,
+            posY: currentPos.y,
+        };
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            if (!dragStartRef.current) return;
+            const dx = moveEvent.clientX - dragStartRef.current.mouseX;
+            const dy = moveEvent.clientY - dragStartRef.current.mouseY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3)
+                hasDraggedRef.current = true;
+            const newPos = {
+                x: Math.max(
+                    0,
+                    Math.min(
+                        window.innerWidth - ballSize,
+                        dragStartRef.current.posX + dx,
+                    ),
+                ),
+                y: Math.max(
+                    0,
+                    Math.min(
+                        window.innerHeight - ballSize,
+                        dragStartRef.current.posY + dy,
+                    ),
+                ),
+            };
+            setFloatPosition(newPos);
+            localStorage.setItem(
+                'askweb:float-position',
+                JSON.stringify(newPos),
+            );
+        };
+
+        const handleMouseUp = () => {
+            dragStartRef.current = null;
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    };
+
     const handleResizeMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
         const startX = e.clientX;
@@ -389,18 +469,45 @@ export default function App() {
     }
 
     if (!isExpanded) {
+        const ballSize = 62;
+        const posStyle = floatPosition
+            ? {
+                  left: `${floatPosition.x}px`,
+                  top: `${floatPosition.y}px`,
+                  bottom: 'auto',
+                  right: 'auto',
+              }
+            : {};
         return (
-            <div data-theme={theme} className="ai-summary-floating-container">
+            <div
+                data-theme={theme}
+                className="ai-summary-floating-container ai-summary-floating-ball-wrapper"
+                style={posStyle}
+                onMouseDown={handleFloatDragStart}
+            >
                 <button
                     className="ai-summary-floating-ball"
-                    onClick={toggleExpand}
+                    onClick={() => {
+                        if (!hasDraggedRef.current) toggleExpand();
+                    }}
                     title={t('openAskWebAi')}
                 >
                     <img
                         src={icon}
                         alt="AskWeb AI"
+                        draggable={false}
                         style={{ width: '42px', height: '42px' }}
                     />
+                </button>
+                <button
+                    className="ai-summary-float-close"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleCloseFloatingBall();
+                    }}
+                    title={t('hide')}
+                >
+                    ×
                 </button>
             </div>
         );
@@ -450,6 +557,14 @@ export default function App() {
                     </div>
                     <div className="ai-summary-actions">
                         <button
+                            className="ai-summary-icon-btn"
+                            onClick={handleHideFloatingBall}
+                            title={t('hideFloatingBall')}
+                            aria-label={t('hideFloatingBall')}
+                        >
+                            <RiEyeOffFill aria-hidden="true" />
+                        </button>
+                        <button
                             className="settings-btn"
                             onClick={openSettings}
                             title={t('openSettings')}
@@ -457,14 +572,6 @@ export default function App() {
                             aria-label={t('openSettings')}
                         >
                             <RiSettings3Fill aria-hidden="true" />
-                        </button>
-                        <button
-                            className="ai-summary-icon-btn"
-                            onClick={handleHideFloatingBall}
-                            title={t('hideFloatingBall')}
-                            aria-label={t('hideFloatingBall')}
-                        >
-                            <RiEyeOffFill aria-hidden="true" />
                         </button>
                         <button
                             className="ai-summary-icon-btn"

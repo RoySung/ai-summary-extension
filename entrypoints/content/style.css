@@ -45,6 +45,51 @@
 
 .ai-summary-floating-ball img {
     transform: scale(2.5) translate(-3px, 7px);
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+
+/* Draggable ball wrapper */
+.ai-summary-floating-ball-wrapper {
+    cursor: grab;
+    user-select: none;
+}
+
+.ai-summary-floating-ball-wrapper:active {
+    cursor: grabbing;
+}
+
+.ai-summary-floating-ball-wrapper .ai-summary-floating-ball {
+    cursor: pointer;
+}
+
+/* Close / hide button on the floating ball */
+.ai-summary-float-close {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    padding: 0;
+    z-index: 10;
+    transform: scale(0.8);
+}
+
+.ai-summary-floating-ball-wrapper:hover .ai-summary-float-close {
+    opacity: 1;
+    transform: scale(1);
 }
 
 /* Floating Window */

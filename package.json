@@ -1,8 +1,8 @@
 {
-    "name": "wxt-react-starter",
+    "name": "ai-summary-extension",
     "description": "manifest.json description",
     "private": true,
-    "version": "0.0.4",
+    "version": "0.0.5",
     "type": "module",
     "scripts": {
         "dev": "wxt",

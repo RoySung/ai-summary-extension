@@ -24,4 +24,4 @@ web-ext.config.ts
 *.sw?
 
 # Environment files
-.env.submit
+.env.submit*

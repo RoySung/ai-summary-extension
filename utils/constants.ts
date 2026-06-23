@@ -10,9 +10,9 @@ export const CONTEXT_MENU_IDS = {
 // Gemini models refs: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models
 export const MODELS = {
     GEMINI: {
-        'gemini-2.5-flash': {
-            name: 'Gemini 2.5 Flash',
-            maxInput: 1000000,
+        'gemini-3-pro-preview': {
+            name: 'Gemini 3 Pro Preview',
+            maxInput: 2000000,
             maxOutput: 8192,
         },
         'gemini-3-flash-preview': {
@@ -20,23 +20,33 @@ export const MODELS = {
             maxInput: 1000000,
             maxOutput: 8192,
         },
-        'gemini-3-pro-preview': {
-            name: 'Gemini 3 Pro Preview',
+        'gemini-2.5-pro': {
+            name: 'Gemini 2.5 Pro',
             maxInput: 2000000,
+            maxOutput: 8192,
+        },
+        'gemini-2.5-flash': {
+            name: 'Gemini 2.5 Flash',
+            maxInput: 1000000,
             maxOutput: 8192,
         },
     },
     OPENAI: {
+        'o3-mini': {
+            name: 'o3-mini',
+            maxInput: 200000,
+            maxOutput: 100000,
+        },
+        o1: {
+            name: 'o1',
+            maxInput: 200000,
+            maxOutput: 100000,
+        },
         'gpt-4o': { name: 'GPT-4o', maxInput: 128000, maxOutput: 16384 },
         'gpt-4o-mini': {
             name: 'GPT-4o Mini',
             maxInput: 128000,
             maxOutput: 16384,
-        },
-        'gpt-4-turbo': {
-            name: 'GPT-4 Turbo',
-            maxInput: 128000,
-            maxOutput: 4096,
         },
     },
 };

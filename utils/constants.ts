@@ -30,6 +30,16 @@ export const MODELS = {
             maxInput: 1000000,
             maxOutput: 8192,
         },
+        'gemini-3.5-flash': {
+            name: 'Gemini 3.5 Flash',
+            maxInput: 1000000,
+            maxOutput: 8192,
+        },
+        'gemini-3.1-flash-lite': {
+            name: 'Gemini 3.1 Flash Lite',
+            maxInput: 1000000,
+            maxOutput: 8192,
+        },
     },
     OPENAI: {
         'o3-mini': {

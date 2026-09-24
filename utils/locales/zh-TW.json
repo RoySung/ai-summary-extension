@@ -25,6 +25,8 @@
     "openaiConfiguration": "OpenAI 設定",
     "apiKey": "API 金鑰",
     "model": "模型",
+    "unlistedModelOption": "{{model}}（舊版／自訂模型）",
+    "unlistedModelWarning": "此模型不在目前的支援清單中，可能無法正常運作。建議選擇其他模型。",
     "getApiKeyFrom": "前往此處取得 API 金鑰：",
     "enterGeminiApiKey": "輸入你的 Gemini API 金鑰",
     "enterOpenaiApiKey": "輸入你的 OpenAI API 金鑰",

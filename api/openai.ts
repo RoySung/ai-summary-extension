@@ -3,8 +3,12 @@ import { splitIntoChunks } from '../utils/chunking';
 
 type PromptVariables = Record<string, string | undefined>;
 
+const DEFAULT_MAX_COMPLETION_TOKENS = 4096;
+const SUMMARY_MAX_COMPLETION_TOKENS = 8192;
+const PROMPT_TOKEN_HEADROOM = 4096;
+
 export interface OpenAIMessage {
-    role: 'system' | 'user' | 'assistant';
+    role: 'developer' | 'system' | 'user' | 'assistant';
     content: string;
 }
 
@@ -23,7 +27,7 @@ export class OpenAIAPI {
     private apiKey: string;
     private model: string;
 
-    constructor(apiKey: string, model: string = 'gpt-4o-mini') {
+    constructor(apiKey: string, model: string = 'gpt-6-luna') {
         this.apiKey = apiKey;
         this.model = model;
     }
@@ -53,10 +57,28 @@ export class OpenAIAPI {
     /**
      * Generate content using OpenAI API
      */
-    async generateContent(messages: OpenAIMessage[]): Promise<string> {
+    async generateContent(
+        messages: OpenAIMessage[],
+        maxCompletionTokens: number = DEFAULT_MAX_COMPLETION_TOKENS,
+    ): Promise<string> {
         const modelConfig =
             MODELS.OPENAI[this.model as keyof typeof MODELS.OPENAI];
-        const maxTokens = modelConfig?.maxOutput || 4096;
+        const maxTokens = Math.min(
+            maxCompletionTokens,
+            modelConfig?.maxOutput || DEFAULT_MAX_COMPLETION_TOKENS,
+        );
+
+        const requestBody = {
+            model: this.model,
+            messages,
+            max_completion_tokens: maxTokens,
+            ...(modelConfig?.reasoningEffort && {
+                reasoning_effort: modelConfig.reasoningEffort,
+            }),
+            ...(modelConfig?.supportsTemperature !== false && {
+                temperature: 0.7,
+            }),
+        };
 
         const response = await fetch(OPENAI_API_ENDPOINT, {
             method: 'POST',
@@ -64,12 +86,7 @@ export class OpenAIAPI {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${this.apiKey}`,
             },
-            body: JSON.stringify({
-                model: this.model,
-                messages,
-                temperature: 0.7,
-                max_tokens: maxTokens,
-            }),
+            body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
@@ -103,8 +120,17 @@ export class OpenAIAPI {
             MODELS.OPENAI[this.model as keyof typeof MODELS.OPENAI];
         // Default to conservative 5000 if config not found (shouldn't happen)
         const contextWindow = modelConfig?.maxInput || 128000;
-        // Use 90% of context window as safe limit
-        const maxInputTokens = Math.floor(contextWindow * 0.9);
+        // Reserve space for generated/reasoning tokens and prompt framing while
+        // retaining the existing 10% safety margin for tokenizer differences.
+        const maxInputTokens = Math.max(
+            1,
+            Math.min(
+                Math.floor(contextWindow * 0.9),
+                contextWindow -
+                    SUMMARY_MAX_COMPLETION_TOKENS -
+                    PROMPT_TOKEN_HEADROOM,
+            ),
+        );
         const chunks = splitIntoChunks(content, maxInputTokens);
 
         // Single chunk - direct summarization
@@ -116,16 +142,19 @@ export class OpenAIAPI {
                   })
                 : `Please provide a concise and comprehensive summary of the following content:\n\n${content}`;
 
-            return await this.generateContent([
-                {
-                    role: 'system',
-                    content: this.withLanguageInstruction(
-                        'You are a helpful assistant that provides clear and concise summaries.',
-                        responseLanguageInstruction,
-                    ),
-                },
-                { role: 'user', content: userMessage },
-            ]);
+            return await this.generateContent(
+                [
+                    {
+                        role: 'developer',
+                        content: this.withLanguageInstruction(
+                            'You are a helpful assistant that provides clear and concise summaries.',
+                            responseLanguageInstruction,
+                        ),
+                    },
+                    { role: 'user', content: userMessage },
+                ],
+                SUMMARY_MAX_COMPLETION_TOKENS,
+            );
         }
 
         // Multi-chunk processing with progress reporting
@@ -137,23 +166,26 @@ export class OpenAIAPI {
         for (let i = 0; i < chunks.length; i++) {
             console.log(`📄 Summarizing chunk ${i + 1}/${chunks.length}...`);
 
-            const summary = await this.generateContent([
-                {
-                    role: 'system',
-                    content: this.withLanguageInstruction(
-                        'You are a helpful assistant that summarizes content.',
-                        responseLanguageInstruction,
-                    ),
-                },
-                {
-                    role: 'user',
-                    content: `Please provide a concise summary of the following content (Part ${
-                        i + 1
-                    } of ${chunks.length}):\n\n${
-                        chunks[i]
-                    }\n\nFocus on key points, important details, and main ideas.`,
-                },
-            ]);
+            const summary = await this.generateContent(
+                [
+                    {
+                        role: 'developer',
+                        content: this.withLanguageInstruction(
+                            'You are a helpful assistant that summarizes content.',
+                            responseLanguageInstruction,
+                        ),
+                    },
+                    {
+                        role: 'user',
+                        content: `Please provide a concise summary of the following content (Part ${
+                            i + 1
+                        } of ${chunks.length}):\n\n${
+                            chunks[i]
+                        }\n\nFocus on key points, important details, and main ideas.`,
+                    },
+                ],
+                SUMMARY_MAX_COMPLETION_TOKENS,
+            );
             chunkSummaries.push(summary);
 
             // Small delay to avoid rate limiting
@@ -180,16 +212,19 @@ export class OpenAIAPI {
             ? combinedContent
             : `I have summaries of different parts of a document. Please synthesize these into one coherent, comprehensive summary that covers all main points:\n\n${combinedContent}\n\nCreate a well-structured final summary that:\n1. Integrates all key points from the parts\n2. Removes redundancy\n3. Maintains logical flow\n4. Highlights the most important information`;
 
-        const finalSummary = await this.generateContent([
-            {
-                role: 'system',
-                content: this.withLanguageInstruction(
-                    'You are a helpful assistant that synthesizes information.',
-                    responseLanguageInstruction,
-                ),
-            },
-            { role: 'user', content: finalPrompt },
-        ]);
+        const finalSummary = await this.generateContent(
+            [
+                {
+                    role: 'developer',
+                    content: this.withLanguageInstruction(
+                        'You are a helpful assistant that synthesizes information.',
+                        responseLanguageInstruction,
+                    ),
+                },
+                { role: 'user', content: finalPrompt },
+            ],
+            SUMMARY_MAX_COMPLETION_TOKENS,
+        );
 
         console.log('✅ Final summary complete!');
         return finalSummary;
@@ -222,7 +257,7 @@ Question: ${question}`;
 
         return await this.generateContent([
             {
-                role: 'system',
+                role: 'developer',
                 content: this.withLanguageInstruction(
                     'You are a helpful assistant that answers questions based on provided context.',
                     responseLanguageInstruction,

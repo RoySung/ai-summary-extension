@@ -24,6 +24,14 @@ export default function SettingsContent({
 }: SettingsContentProps) {
     const [cleared, setCleared] = useState(false);
     const t = useTranslate(settings.language);
+    const isUnlistedGeminiModel = !Object.hasOwn(
+        MODELS.GEMINI,
+        settings.geminiModel,
+    );
+    const isUnlistedOpenAIModel = !Object.hasOwn(
+        MODELS.OPENAI,
+        settings.openaiModel,
+    );
 
     const handleClearCache = async () => {
         await CacheManager.clear();
@@ -263,6 +271,11 @@ export default function SettingsContent({
                         <select
                             id="gemini-model"
                             value={settings.geminiModel}
+                            aria-describedby={
+                                isUnlistedGeminiModel
+                                    ? 'gemini-model-warning'
+                                    : undefined
+                            }
                             onChange={(e) =>
                                 setSettings({
                                     ...settings,
@@ -271,6 +284,13 @@ export default function SettingsContent({
                             }
                             className="select-field"
                         >
+                            {isUnlistedGeminiModel && (
+                                <option value={settings.geminiModel}>
+                                    {t('unlistedModelOption', {
+                                        model: settings.geminiModel,
+                                    })}
+                                </option>
+                            )}
                             {Object.entries(MODELS.GEMINI).map(
                                 ([key, model]) => (
                                     <option key={key} value={key}>
@@ -279,6 +299,15 @@ export default function SettingsContent({
                                 ),
                             )}
                         </select>
+                        {isUnlistedGeminiModel && (
+                            <p
+                                id="gemini-model-warning"
+                                className="model-warning"
+                                role="status"
+                            >
+                                {t('unlistedModelWarning')}
+                            </p>
+                        )}
                     </div>
                 </section>
             )}
@@ -317,6 +346,11 @@ export default function SettingsContent({
                         <select
                             id="openai-model"
                             value={settings.openaiModel}
+                            aria-describedby={
+                                isUnlistedOpenAIModel
+                                    ? 'openai-model-warning'
+                                    : undefined
+                            }
                             onChange={(e) =>
                                 setSettings({
                                     ...settings,
@@ -325,6 +359,13 @@ export default function SettingsContent({
                             }
                             className="select-field"
                         >
+                            {isUnlistedOpenAIModel && (
+                                <option value={settings.openaiModel}>
+                                    {t('unlistedModelOption', {
+                                        model: settings.openaiModel,
+                                    })}
+                                </option>
+                            )}
                             {Object.entries(MODELS.OPENAI).map(
                                 ([key, model]) => (
                                     <option key={key} value={key}>
@@ -333,6 +374,15 @@ export default function SettingsContent({
                                 ),
                             )}
                         </select>
+                        {isUnlistedOpenAIModel && (
+                            <p
+                                id="openai-model-warning"
+                                className="model-warning"
+                                role="status"
+                            >
+                                {t('unlistedModelWarning')}
+                            </p>
+                        )}
                     </div>
                 </section>
             )}

@@ -7,56 +7,58 @@ export const CONTEXT_MENU_IDS = {
 } as const;
 
 // Model Configurations
-// Gemini models refs: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models
+// Model lifecycle refs:
+// https://ai.google.dev/gemini-api/docs/models
+// https://developers.openai.com/api/docs/models
 export const MODELS = {
     GEMINI: {
-        'gemini-3-pro-preview': {
-            name: 'Gemini 3 Pro Preview',
-            maxInput: 2000000,
-            maxOutput: 8192,
+        'gemini-3.8-flash': {
+            name: 'Gemini 3.8 Flash',
+            maxInput: 1048576,
+            maxOutput: 65536,
         },
-        'gemini-3-flash-preview': {
-            name: 'Gemini 3 Flash Preview',
-            maxInput: 1000000,
-            maxOutput: 8192,
+        'gemini-3.7-flash': {
+            name: 'Gemini 3.7 Flash',
+            maxInput: 1048576,
+            maxOutput: 65536,
         },
-        'gemini-2.5-pro': {
-            name: 'Gemini 2.5 Pro',
-            maxInput: 2000000,
-            maxOutput: 8192,
-        },
-        'gemini-2.5-flash': {
-            name: 'Gemini 2.5 Flash',
-            maxInput: 1000000,
-            maxOutput: 8192,
+        'gemini-3.6-flash': {
+            name: 'Gemini 3.6 Flash',
+            maxInput: 1048576,
+            maxOutput: 65536,
         },
         'gemini-3.5-flash': {
             name: 'Gemini 3.5 Flash',
-            maxInput: 1000000,
-            maxOutput: 8192,
+            maxInput: 1048576,
+            maxOutput: 65536,
         },
-        'gemini-3.1-flash-lite': {
-            name: 'Gemini 3.1 Flash Lite',
-            maxInput: 1000000,
-            maxOutput: 8192,
+        'gemini-3.5-flash-lite': {
+            name: 'Gemini 3.5 Flash-Lite',
+            maxInput: 1048576,
+            maxOutput: 65536,
         },
     },
     OPENAI: {
-        'o3-mini': {
-            name: 'o3-mini',
-            maxInput: 200000,
-            maxOutput: 100000,
+        'gpt-6-astra': {
+            name: 'GPT-6 Astra',
+            maxInput: 1050000,
+            maxOutput: 128000,
+            reasoningEffort: 'low',
+            supportsTemperature: false,
         },
-        o1: {
-            name: 'o1',
-            maxInput: 200000,
-            maxOutput: 100000,
+        'gpt-6-sol': {
+            name: 'GPT-6 Sol',
+            maxInput: 1050000,
+            maxOutput: 128000,
+            reasoningEffort: 'none',
+            supportsTemperature: true,
         },
-        'gpt-4o': { name: 'GPT-4o', maxInput: 128000, maxOutput: 16384 },
-        'gpt-4o-mini': {
-            name: 'GPT-4o Mini',
-            maxInput: 128000,
-            maxOutput: 16384,
+        'gpt-6-luna': {
+            name: 'GPT-6 Luna',
+            maxInput: 1050000,
+            maxOutput: 128000,
+            reasoningEffort: 'none',
+            supportsTemperature: true,
         },
     },
 };
@@ -158,8 +160,8 @@ export const DEFAULT_SETTINGS = {
     apiProvider: 'gemini' as 'gemini' | 'openai',
     geminiApiKey: '',
     openaiApiKey: '',
-    geminiModel: 'gemini-2.5-flash',
-    openaiModel: 'gpt-4o-mini',
+    geminiModel: 'gemini-3.8-flash',
+    openaiModel: 'gpt-6-luna',
     customPrompts: {
         summarize: DEFAULT_PROMPTS.SUMMARIZE,
         question: DEFAULT_PROMPTS.QUESTION,

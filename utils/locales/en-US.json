@@ -25,6 +25,8 @@
     "openaiConfiguration": "OpenAI Configuration",
     "apiKey": "API Key",
     "model": "Model",
+    "unlistedModelOption": "{{model}} (Legacy/custom)",
+    "unlistedModelWarning": "This model is not in the current supported list and may not work. Choose another model.",
     "getApiKeyFrom": "Get your API key from",
     "enterGeminiApiKey": "Enter your Gemini API key",
     "enterOpenaiApiKey": "Enter your OpenAI API key",
